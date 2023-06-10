@@ -14,7 +14,7 @@ static const ext::vector<testObj> unorderedObj(
 
 size_t vectLength = unorderedInt.size();
 
-BOOST_AUTO_TEST_CASE(Default_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Default_Constructor) {
 	ext::heap<int> heapInt;
 
 	for (size_t i = 0; i < vectLength; ++i) {
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(Default_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Size_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Size_Constructor) {
 	ext::heap<int> heapInt(EXT_HEAP_SIZE(5));
 
 	BOOST_TEST(heapInt.size() == 0);
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Size_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Func_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Func_Constructor) {
 	ext::vector<int> reverseInt = orderedInt;
 	std::reverse(reverseInt.begin(), reverseInt.end());
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Func_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Func_And_Size_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Func_And_Size_Constructor) {
 	ext::vector<int> reverseInt = orderedInt;
 	std::reverse(reverseInt.begin(), reverseInt.end());
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Func_And_Size_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Initializer_List_Constructor) {
 	ext::heap<int> heapInt({2, 5, 3, 4});
 
 	BOOST_TEST(heapInt.peek() == 2);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
 	heapInt.pop();
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_And_Func_Constructor) {
+BOOST_AUTO_TEST_CASE(Heap_Initializer_List_And_Func_Constructor) {
 	ext::heap<int> heapInt({2, 5, 3, 4}, EXT_MAX_HEAP(int));
 	ext::heap<testObj> heapTestObj({testObj(2), testObj(5), testObj(3), testObj(4)},
 	                               [](const testObj &t1, const testObj &t2) { return t1.val > t2.val; });
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_And_Func_Constructor) {
 	heapTestObj.pop();
 }
 
-BOOST_AUTO_TEST_CASE(Destructor) {
+BOOST_AUTO_TEST_CASE(Heap_Destructor) {
 	ext::heap<int> heapInt;
 	ext::heap<int> heapIntSize(EXT_HEAP_SIZE(5));
 	ext::heap<int> heapIntFunction(EXT_MAX_HEAP(int));
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Destructor) {
 	BOOST_CHECK_NO_THROW(heapTestObjInitializerListFunction.~heap());
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Assignment) {
+BOOST_AUTO_TEST_CASE(Heap_Initializer_List_Assignment) {
 	ext::heap<int> heapInt = {2, 5, 3, 4};
 
 	BOOST_TEST(heapInt.peek() == 2);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Assignment) {
 	heapInt.pop();
 }
 
-BOOST_AUTO_TEST_CASE(Peek_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Peek_Method) {
 	ext::heap<int> heapInt = {3, 2, 1};
 	ext::heap<testObj> heapTestObj({testObj(2), testObj(5), testObj(3), testObj(4)},
 	                               [](const testObj &t1, const testObj &t2) {
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Peek_Method) {
 	BOOST_TEST(heapTestObj.size() == 4);
 }
 
-BOOST_AUTO_TEST_CASE(Empty_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Empty_Method) {
 	ext::heap<int> heapInt = {1};
 
 	BOOST_TEST(heapInt.empty() == false);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(Empty_Method) {
 	BOOST_TEST(heapInt.empty() == true);
 }
 
-BOOST_AUTO_TEST_CASE(Size_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Size_Method) {
 	ext::heap<int> heapInt = {1, 2, 3};
 
 	BOOST_TEST(heapInt.size() == 3);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(Size_Method) {
 	BOOST_TEST(heapInt.size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(Capacity_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Capacity_Method) {
 	ext::heap<int> heapIntEmpty;
 	ext::heap<int> heapInt = {1};
 	ext::heap<int> heapIntSize(EXT_HEAP_SIZE(5));
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Capacity_Method) {
 	BOOST_TEST(heapIntSize.capacity() == 5);
 }
 
-BOOST_AUTO_TEST_CASE(Max_Capacity_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Max_Capacity_Method) {
 	ext::heap<int> heapIntEmpty;
 	ext::heap<int> heapInt = {1};
 
@@ -209,14 +209,14 @@ BOOST_AUTO_TEST_CASE(Max_Capacity_Method) {
 	BOOST_TEST(heapInt.max_capacity() == SIZE_MAX);
 }
 
-BOOST_AUTO_TEST_CASE(Clear_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Clear_Method) {
 	ext::heap<int> heapInt = {1, 2, 3};
 	heapInt.clear();
 	BOOST_TEST(heapInt.size() == 0);
 	BOOST_TEST(heapInt.capacity() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(Push_Copy_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Push_Copy_Method) {
 	ext::heap<testObj> heapTestObj([](const testObj &t1, const testObj &t2) {
 		return t1.val > t2.val;
 	});
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(Push_Copy_Method) {
 	BOOST_TEST(heapTestObj.peek().val == 6);
 }
 
-BOOST_AUTO_TEST_CASE(Push_Move_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Push_Move_Method) {
 	ext::heap<testObj> heapTestObj([](const testObj &t1, const testObj &t2) {
 		return t1.val > t2.val;
 	});
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(Push_Move_Method) {
 	BOOST_TEST(heapTestObj.peek().val == 6);
 }
 
-BOOST_AUTO_TEST_CASE(Emplace_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Emplace_Method) {
 	ext::heap<testObj> heapTestObj([](const testObj &t1, const testObj &t2) {
 		return t1.val > t2.val;
 	});
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(Emplace_Method) {
 	BOOST_TEST(heapTestObj.peek().val == 6);
 }
 
-BOOST_AUTO_TEST_CASE(Pop_Method) {
+BOOST_AUTO_TEST_CASE(Heap_Pop_Method) {
 	ext::heap<int> heapInt = {1, 2, 3};
 	ext::heap<testObj> heapTestObj({testObj(1), testObj(2), testObj(3)}, [](const testObj &t1, const testObj &t2) {
 		return t1.val > t2.val;

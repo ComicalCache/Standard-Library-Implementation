@@ -7,21 +7,21 @@
 #include <Vector/Vector.hpp>
 #include <TestObj.hpp>
 
-BOOST_AUTO_TEST_CASE(Default_Constructor) {
+BOOST_AUTO_TEST_CASE(Vector_Default_Constructor) {
 	ext::vector<int> vec;
 
 	BOOST_TEST(vec.capacity() == 2);
 	BOOST_TEST(vec.size() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(Size_Constructor) {
+BOOST_AUTO_TEST_CASE(Vector_Size_Constructor) {
 	ext::vector<int> vec(5);
 
 	BOOST_TEST(vec.capacity() == 5);
 	BOOST_TEST(vec.size() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
+BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Constructor) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
 
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Constructor) {
+BOOST_AUTO_TEST_CASE(Vector_Copy_Constructor) {
 	ext::vector<int> vec1Original({0, 1, 2});
 	ext::vector<int> vec1Copy(vec1Original);
 	ext::vector<std::string> vec2Original({"0", "1", "2"});
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(Copy_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Move_Constructor) {
+BOOST_AUTO_TEST_CASE(Vector_Move_Constructor) {
 	ext::vector<int> vec1Original({0, 1, 2});
 	const int *vec1DataPointer = vec1Original.data();
 	ext::vector<int> vec1Move(std::move(vec1Original));
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Move_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Destructor) {
+BOOST_AUTO_TEST_CASE(Vector_Destructor) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Destructor) {
 	BOOST_CHECK_NO_THROW(vec2.~vector());
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Assigment_Operator) {
+BOOST_AUTO_TEST_CASE(Vector_Copy_Assigment_Operator) {
 	ext::vector<int> vec1Original({0, 1, 2});
 	ext::vector<int> vec1Copy = vec1Original;
 	ext::vector<std::string> vec2Original({"0", "1", "2"});
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(Copy_Assigment_Operator) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Move_Assignment) {
+BOOST_AUTO_TEST_CASE(Vector_Move_Assignment) {
 	ext::vector<int> vec1Original({0, 1, 2});
 	const int *vec1DataPointer = vec1Original.data();
 	ext::vector<int> vec1Move = std::move(vec1Original);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(Move_Assignment) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Assignment_Operator) {
+BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Assignment_Operator) {
 	ext::vector<int> vec1 = {0, 1, 2};
 	ext::vector<std::string> vec2 = {"0", "1", "2"};
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Assignment_Operator) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Square_Bracket_Access_Operator) {
+BOOST_AUTO_TEST_CASE(Vector_Square_Bracket_Access_Operator) {
 	ext::vector<int> vec1 = {0, 1, 2};
 	ext::vector<std::string> vec2 = {"0", "1", "2"};
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(Square_Bracket_Access_Operator) {
 	BOOST_TEST(vec2[0] == "9");
 }
 
-BOOST_AUTO_TEST_CASE(At_Access_Method) {
+BOOST_AUTO_TEST_CASE(Vector_At_Access_Method) {
 	ext::vector<int> vec1 = {0, 1, 2};
 	ext::vector<std::string> vec2 = {"0", "1", "2"};
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(At_Access_Method) {
 	BOOST_CHECK_THROW(vec2.at(-3), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Capacity) {
+BOOST_AUTO_TEST_CASE(Vector_Capacity) {
 	ext::vector<int> vec1(4);
 	ext::vector<std::string> vec2(4);
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(Capacity) {
 	BOOST_TEST(vec1.max_capacity() == SIZE_MAX);
 }
 
-BOOST_AUTO_TEST_CASE(Reserve_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Reserve_Method) {
 	ext::vector<int> vec1(4);
 	ext::vector<std::string> vec2(4);
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(Reserve_Method) {
 	BOOST_TEST(vec2.capacity() == 5);
 }
 
-BOOST_AUTO_TEST_CASE(Shrink_To_Fit_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Shrink_To_Fit_Method) {
 	ext::vector<int> vec1(4);
 	ext::vector<std::string> vec2(4);
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(Shrink_To_Fit_Method) {
 	BOOST_CHECK_THROW(vec2.at(3), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Clear_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Clear_Method) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(Clear_Method) {
 	BOOST_CHECK_THROW(vec2.at(0), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Erase_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Erase_Method) {
 	ext::vector<int> vec1({0, 1, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "1", "2"});
 
@@ -312,7 +312,7 @@ BOOST_TEST(vec2.size() == 3); \
 BOOST_TEST(vec3.capacity() == 3); \
 BOOST_TEST(vec3.size() == 3);
 
-BOOST_AUTO_TEST_CASE(Copy_Insert_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Copy_Insert_Method) {
 	ext::vector<int> vec1({0, 2});
 	ext::vector<std::string> vec2({"0", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(2)});
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(Copy_Insert_Method) {
 	BOOST_TEST(vec3[1].status == COPY_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Move_Insert_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Move_Insert_Method) {
 	ext::vector<int> vec1({0, 2});
 	ext::vector<std::string> vec2({"0", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(2)});
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(Move_Insert_Method) {
 	BOOST_TEST(vec3[1].status == MOVE_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Push_Back_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Copy_Push_Back_Method) {
 	ext::vector<int> vec1({0, 1});
 	ext::vector<std::string> vec2({"0", "1"});
 	ext::vector<testObj> vec3({testObj(0), testObj(1)});
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(Copy_Push_Back_Method) {
 	BOOST_TEST(vec3[2].status == COPY_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Move_Push_Back_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Move_Push_Back_Method) {
 	ext::vector<int> vec1({0, 1});
 	ext::vector<std::string> vec2({"0", "1"});
 	ext::vector<testObj> vec3({testObj(0), testObj(1)});
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(Move_Push_Back_Method) {
 	BOOST_TEST(vec3[2].status == MOVE_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Pop_Back_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Pop_Back_Method) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(Pop_Back_Method) {
 	BOOST_TEST(vec2.size() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(Swap_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Swap_Method) {
 	ext::vector<int> vec1Original({0, 1, 2});
 	const int *vec1OriginalDataPointer = vec1Original.data();
 	ext::vector<int> vec1Swap({3});
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(Swap_Method) {
 	BOOST_CHECK_THROW(vec2Original.at(1), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Swap_Items_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Swap_Items_Method) {
 	ext::vector<int> vec1({0, 2, 1});
 	ext::vector<std::string> vec2({"0", "2", "1"});
 
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(Swap_Items_Method) {
 	BOOST_CHECK_THROW(vec2.swap_items(1, 5), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Resize_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Resize_Method) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
 
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(Resize_Method) {
 	BOOST_CHECK_THROW(vec2.at(2), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Emplace_Back_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Emplace_Back_Method) {
 	ext::vector<int> vec1({0, 1});
 	ext::vector<std::string> vec2({"0", "1"});
 	ext::vector<testObj> vec3({testObj(0), testObj(1)});
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(Emplace_Back_Method) {
 	BOOST_TEST(vec3[2].status == CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Emplace_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Emplace_Method) {
 	ext::vector<int> vec1({0, 2});
 	ext::vector<std::string> vec2({"0", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(2)});
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(Emplace_Method) {
 	BOOST_TEST(vec3[1].status == CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Replace_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Copy_Replace_Method) {
 	ext::vector<int> vec1({0, 3, 2});
 	ext::vector<std::string> vec2({"0", "3", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(3), testObj(2)});
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(Copy_Replace_Method) {
 	BOOST_TEST(vec3[1].status == COPY_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Move_Replace_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Move_Replace_Method) {
 	ext::vector<int> vec1({0, 3, 2});
 	ext::vector<std::string> vec2({"0", "3", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(3), testObj(2)});
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(Move_Replace_Method) {
 	BOOST_TEST(vec3[1].status == MOVE_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Emplace_Replace_Method) {
+BOOST_AUTO_TEST_CASE(Vector_Emplace_Replace_Method) {
 	ext::vector<int> vec1({0, 3, 2});
 	ext::vector<std::string> vec2({"0", "3", "2"});
 	ext::vector<testObj> vec3({testObj(0), testObj(3), testObj(2)});
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(Emplace_Replace_Method) {
 	BOOST_TEST(vec3[1].status == CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Equality_Operators) {
+BOOST_AUTO_TEST_CASE(Vector_Equality_Operators) {
 	ext::vector<int> vecInt1({0, 1, 2});
 	ext::vector<int> vecInt2({0, 1});
 	ext::vector<std::string> vecString1({"0", "1", "2"});

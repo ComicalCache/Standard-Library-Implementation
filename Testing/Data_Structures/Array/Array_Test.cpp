@@ -6,7 +6,7 @@
 #include <Array/Array.hpp>
 #include <TestObj.hpp>
 
-BOOST_AUTO_TEST_CASE(Default_Constructor) {
+BOOST_AUTO_TEST_CASE(Array_Default_Constructor) {
 	ext::array<int, 3> arr1;
 	ext::array<std::string, 3> arr2;
 
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(Default_Constructor) {
 	BOOST_TEST(arr2.size() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
+BOOST_AUTO_TEST_CASE(Array_Initializer_List_Constructor) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
 
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Constructor) {
+BOOST_AUTO_TEST_CASE(Array_Copy_Constructor) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<int, 3> arr1Copy(arr1);
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(Copy_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Move_Constructor) {
+BOOST_AUTO_TEST_CASE(Array_Move_Constructor) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	int *arr1DataPointer = arr1.data();
 	ext::array<int, 3> arr1Move(std::move(arr1));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Move_Constructor) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Destructor) {
+BOOST_AUTO_TEST_CASE(Array_Destructor) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(Destructor) {
 	BOOST_CHECK_NO_THROW(arr2.~array());
 }
 
-BOOST_AUTO_TEST_CASE(Initializer_List_Assignment_Operator) {
+BOOST_AUTO_TEST_CASE(Array_Initializer_List_Assignment_Operator) {
 	ext::array<int, 3> arr1 = {0, 1, 2};
 	ext::array<std::string, 3> arr2 = {"0", "1", "2"};
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Initializer_List_Assignment_Operator) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Assignment_Operator) {
+BOOST_AUTO_TEST_CASE(Array_Copy_Assignment_Operator) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<int, 3> arr1Copy = arr1;
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(Copy_Assignment_Operator) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Move_Assignment_Operator) {
+BOOST_AUTO_TEST_CASE(Array_Move_Assignment_Operator) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	int *arr1DataPointer = arr1.data();
 	ext::array<int, 3> arr1Move = std::move(arr1);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(Move_Assignment_Operator) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(Square_Bracket_Access_Operator) {
+BOOST_AUTO_TEST_CASE(Array_Square_Bracket_Access_Operator) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(Square_Bracket_Access_Operator) {
 	BOOST_TEST(arr2[0] == "9");
 }
 
-BOOST_AUTO_TEST_CASE(At_Access_Method) {
+BOOST_AUTO_TEST_CASE(Array_At_Access_Method) {
 	ext::array<int, 3> arr1({0, 1, 2});
 	ext::array<std::string, 3> arr2({"0", "1", "2"});
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(At_Access_Method) {
 	BOOST_CHECK_THROW(arr2.at(5), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Copy_Insert_Method) {
+BOOST_AUTO_TEST_CASE(Array_Copy_Insert_Method) {
 	ext::array<int, 3> arr1({0, 3, 2});
 	ext::array<std::string, 3> arr2({"0", "3", "2"});
 	ext::array<testObj, 3> arr3({testObj(0), testObj(3), testObj(2)});
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(Copy_Insert_Method) {
 	BOOST_TEST(arr3[1].status == COPY_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Move_Insert_Method) {
+BOOST_AUTO_TEST_CASE(Array_Move_Insert_Method) {
 	ext::array<int, 3> arr1({0, 3, 2});
 	ext::array<std::string, 3> arr2({"0", "3", "2"});
 	ext::array<testObj, 3> arr3({testObj(0), testObj(3), testObj(2)});
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(Move_Insert_Method) {
 	BOOST_TEST(arr3[1].status == MOVE_CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Emplace_Method) {
+BOOST_AUTO_TEST_CASE(Array_Emplace_Method) {
 	ext::array<int, 3> arr1({0, 3, 2});
 	ext::array<std::string, 3> arr2({"0", "3", "2"});
 	ext::array<testObj, 3> arr3({testObj(0), testObj(3), testObj(2)});
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(Emplace_Method) {
 	BOOST_TEST(arr3[1].status == CONSTRUCTOR);
 }
 
-BOOST_AUTO_TEST_CASE(Swap_Method) {
+BOOST_AUTO_TEST_CASE(Array_Swap_Method) {
 	ext::array<int, 3> arrInt1({0, 1, 2});
 	ext::array<int, 3> arrInt2({3, 4, 5});
 	int* arrInt1DataPointer = arrInt1.data();
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(Swap_Method) {
 	BOOST_TEST(arrString2.data() == arrString1DataPointer);
 }
 
-BOOST_AUTO_TEST_CASE(Equality_Operators) {
+BOOST_AUTO_TEST_CASE(Array_Equality_Operators) {
 	ext::array<int, 3> arrInt1({0, 1, 2});
 	ext::array<int, 3> arrInt2({0, 4, 2});
 	ext::array<std::string, 3> arrString1({"0", "1", "2"});

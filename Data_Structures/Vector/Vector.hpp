@@ -73,7 +73,6 @@ namespace ext {
 
         /**
          * Copies item to end of buffer and increments the item counter
-         * @warning bounds are not checked
          * @param item - Item to be pushed
          */
         void _internal_push_back(const T &item) {
@@ -83,7 +82,6 @@ namespace ext {
 
         /**
          * Moves item to end of buffer and increments the item counter.
-         * @warning bounds are not checked
          * @param item - Item to be moved
          */
         void _internal_move_back(T &&item) {
@@ -93,7 +91,6 @@ namespace ext {
 
         /**
          * Constructs item at the end of the buffer and increments the item counter
-         * @warning bounds are not checked
          * @tparam Args - Unknown amount of arguments and their types
          * @param args - Argument(s) for the constructor
          */
@@ -126,7 +123,6 @@ namespace ext {
         /**
          * Copy or move copy the current Vector into the destination Vector <br>
          * Move or copy are dependent on if the datatype stored in the Vector is nothrow move constructable or not
-         * @warning bounds are not checked
          * @tparam X - Datatype of buffer stored in Vector (used for conditional compilation)
          * @param dst - Destination Vector
          * @return Decides which methods gets generated
@@ -355,7 +351,7 @@ namespace ext {
          * Destructs the item if not trivial destructible
          * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in Vector
-         * @param i - Index to replace
+         * @param index - Index to replace
          * @param item - Item to replace with
          * @return Decides which methods get generated
          */
@@ -448,9 +444,7 @@ namespace ext {
         vector(const vector<T> &vec) : buffer_size(vec.buffer_size), item_counter(0),
                                        buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
             try {
-                for (size_t i = 0; i < vec.item_counter; ++i) {
-                    this->push_back(vec.buffer[i]);
-                }
+                this->_internal_copy_assign<T>(vec);
             } catch (...) {
                 this->~vector();
 
@@ -496,7 +490,7 @@ namespace ext {
          */
         vector<T> &operator=(const vector<T> &vec) {
             if (this != &vec) {
-                this->_internal_copy_assign(vec);
+                this->_internal_copy_assign(vec); // ? no catch
             }
 
             return *this;
@@ -534,45 +528,45 @@ namespace ext {
         // * Item Access *
         // ***************
         /**
-         * Returns item reference at val i
+         * Returns item reference at index
          * @warning Doesn't check bounds
-         * @param i - Index
+         * @param index - Index
          * @return Item reference
          */
-        T &operator[](size_t i) {
-            return buffer[i];
+        T &operator[](size_t index) {
+            return buffer[index];
         }
 
         /**
-         * Returns const item reference at val i
+         * Returns const item reference at index
          * @warning Doesn't check bounds
-         * @param i - Index
+         * @param index - Index
          * @return Item reference
          */
-        T &operator[](size_t i) const {
-            return buffer[i];
+        T &operator[](size_t index) const {
+            return buffer[index];
         }
 
         /**
-         * Returns item reference at val i
-         * @param i - Index
+         * Returns item reference at index
+         * @param index - Index
          * @return Item reference
          */
-        T &at(size_t i) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        T &at(size_t index) {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            return buffer[i];
+            return buffer[index];
         }
 
         /**
-         * Returns const item reference at val i
-         * @param i - Index
+         * Returns const item reference at index
+         * @param index - Index
          * @return Item reference
          */
-        T &at(size_t i) const {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        T &at(size_t index) const {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            return buffer[i];
+            return buffer[index];
         }
 
         T *data() noexcept { return buffer; }
@@ -641,6 +635,10 @@ namespace ext {
             vector<T> temp(EXT_VECTOR_SIZE(item_counter));
             this->_internal_simple_copy_vector_to<T>(temp);
             temp.swap(*this);
+
+            if (std::is_nothrow_destructible<T>::value == true) {
+                temp.~vector();
+            }
         }
 
         // *************
@@ -649,42 +647,46 @@ namespace ext {
         /**
          * Clears the Vector <br>
          * Destructs all items if not trivial destructible
+         * @warning Destruction can throw
          */
         void clear() {
             this->_internal_clear_items<T>();
         }
 
         /**
-         * Erases item at val i <br>
+         * Erases item at index <br>
          * Destructs item if not trivial destructible
-         * @param i - Index
+         * @warning Destruction can throw
+         * @param index - Index
          */
-        void erase(size_t i) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void erase(size_t index) {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_shift_left<T>(i);
+            this->_internal_shift_left<T>(index);
         }
 
         /**
-         * Copy inserts item at val i
-         * @param i - Index
+         * Copy inserts item at index
+         * @param index - Index
          * @param item - Item to be inserted
          */
-        void insert(size_t i, const T &item) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void insert(size_t index, const T &item) {
+            EXT_VECTOR_ASSERT_INDEX(index)
+            this->_internal_resize_on_demand();
 
-            this->_internal_copy_insert<T>(i, item);
+            this->_internal_copy_insert<T>(index, item);
         }
 
         /**
-         * Move inserts item at val i
-         * @param i - Index
+         * Move inserts item at index
+         * @param index - Index
          * @param item - Item to be inserted
          */
-        void insert(size_t i, T &&item) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void insert(size_t index, T &&item) {
+            EXT_VECTOR_ASSERT_INDEX(index)
+            this->_internal_resize_on_demand();
 
-            this->_internal_move_insert<T>(i, std::move(item));
+            this->_internal_move_insert<T>(index, std::move(item));
         }
 
         /**
@@ -741,7 +743,7 @@ namespace ext {
          * @param size - New item count of Vector
          */
         void resize(size_t size) {
-            for (size_t i = item_counter; i > size; --i) {
+            for (size_t i = item_counter; i > size; i -= 1) {
                 this->_internal_pop_back<T>();
             }
         }
@@ -759,51 +761,52 @@ namespace ext {
         }
 
         /**
-         * Constructs item in place at val i, shifting already existing item and all trailing items to the right
+         * Constructs item in place at index, shifting already existing item and all trailing items to the right
          * @tparam Args - Unknown amount of arguments and their type
-         * @param i - Index
+         * @param index - Index
          * @param args - Constructor arguments
          */
         template<class... Args>
-        void emplace(size_t i, Args &&... args) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void emplace(size_t index, Args &&... args) {
+            EXT_VECTOR_ASSERT_INDEX(index)
+            this->_internal_resize_on_demand();
 
-            this->_internal_emplace<T>(i, std::move(args)...);
+            this->_internal_emplace<T>(index, std::move(args)...);
         }
 
         /**
-         * Copies item and replaces val i with it
-         * @param i - Index to replace
+         * Copies item and replaces index with it
+         * @param index - Index to replace
          * @param item - Item to replace with
          */
-        void replace(size_t i, const T &item) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void replace(size_t index, const T &item) {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_copy_replace<T>(i, item);
+            this->_internal_copy_replace<T>(index, item);
         }
 
         /**
-         * Moves item and replaces val i with it
-         * @param i - Index to replace
+         * Moves item and replaces index with it
+         * @param index - Index to replace
          * @param item - Item to replace with
          */
-        void replace(size_t i, T &&item) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void replace(size_t index, T &&item) {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_move_replace<T>(i, std::move(item));
+            this->_internal_move_replace<T>(index, std::move(item));
         }
 
         /**
-         * Constructs item and replaces val i with it
+         * Constructs item and replaces index with it
          * @tparam Args - Unknown amount of arguments and their type
-         * @param i - Index to replace
+         * @param index - Index to replace
          * @param args - Constructor arguments
          */
         template<class... Args>
-        void replace(size_t i, Args &&... args) {
-            EXT_VECTOR_ASSERT_INDEX(i)
+        void replace(size_t index, Args &&... args) {
+            EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_emplace_replace<T>(i, std::move(args)...);
+            this->_internal_emplace_replace<T>(index, std::move(args)...);
         }
 
         // ************************
@@ -816,6 +819,10 @@ namespace ext {
          */
         bool operator==(const vector<T> &vec) {
             // return (item_counter == vec.item_counter) && (memcmp(buffer, vec.buffer, item_counter * sizeof(T)) == 0);
+            if (this->item_counter != vec.item_counter) {
+                return false;
+            }
+
             for (size_t i = 0; i < item_counter; ++i) {
                 if (buffer[i] != vec.buffer[i]) {
                     return false;
