@@ -105,7 +105,7 @@ namespace ext {
          * Move or copy are dependent on if the datatype stored in the Vector is nothrow move constructable or not <br>
          * Note that for a copy the item is now duplicate at ori and dst, for move ori is now an "empty" value
          * @warning bounds are not checked
-         * @tparam X  - Datatype of buffer stored in Vector (used for conditional compilation)
+         * @tparam X  - Datatype of buffer stored in Vector
          * @param ori - Origin of item to be copied or moved
          * @param dst - Destination of move or copy
          * @return Decides which method gets generated
@@ -123,7 +123,7 @@ namespace ext {
         /**
          * Copy or move copy the current Vector into the destination Vector <br>
          * Move or copy are dependent on if the datatype stored in the Vector is nothrow move constructable or not
-         * @tparam X - Datatype of buffer stored in Vector (used for conditional compilation)
+         * @tparam X - Datatype of buffer stored in Vector
          * @param dst - Destination Vector
          * @return Decides which methods gets generated
          */
@@ -144,7 +144,7 @@ namespace ext {
         /**
          * Destructs the items in the Vector if they are not trivial destructible, else just sets the item counter to 0
          * @warning destruction can throw
-         * @tparam X - Datatype of buffer stored in Vector (used for conditional compilation)
+         * @tparam X - Datatype of buffer stored in Vector
          * @return Decides which methods get generated
          */
         template<class X>
@@ -165,7 +165,7 @@ namespace ext {
          * Copies a Vector into the current Vector; tries to avoid new buffer allocation if enough space has already
          * been allocated to copy the Vector \b and if the items are no throw destructible, else it allocates a new buffer <br>
          * Destructs items of current Vector if not trivial destructible
-         * @tparam X - Datatype of buffer stored in Vector (used for conditional compilation)
+         * @tparam X - Datatype of buffer stored in Vector
          * @param vec - Vector to be copied
          * @return Decides which methods get generated
          */

@@ -13,380 +13,409 @@
 #define EXT_ARRAY_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
 
 namespace ext {
-	template<class T, size_t N>
-	class array {
-	public:
-		using value_type = T;
-		using reference = T &;
-		using const_reference = T const &;
-		using pointer = T *;
-		using const_pointer = T const *;
-		using iterator = T *;
-		using const_iterator = T const *;
-		using riterator = std::reverse_iterator<iterator>;
-		using const_riterator = std::reverse_iterator<const_iterator>;
-		using difference_type = std::ptrdiff_t;
-		using size_type = size_t;
+    template<class T, size_t N>
+    class array {
+    public:
+        using value_type = T;
+        using reference = T &;
+        using const_reference = T const &;
+        using pointer = T *;
+        using const_pointer = T const *;
+        using iterator = T *;
+        using const_iterator = T const *;
+        using riterator = std::reverse_iterator<iterator>;
+        using const_riterator = std::reverse_iterator<const_iterator>;
+        using difference_type = std::ptrdiff_t;
+        using size_type = size_t;
 
-	private:
-		size_t buffer_size;
-		T *buffer;
-		bool valid[N] = {false};
+    private:
+        size_t buffer_size;
+        T *buffer;
+        bool valid[N] = {false};
 
-	private:
-		/**
-		 * Destructs the items in the array if they are not trivial destructible
-		 * @tparam X - Datatype of buffer stored in array
-		 * @return Decides which methods get generated
-		 */
-		template<class X>
-		EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) internal_clear_items() {
-			for (size_t i = 0; i < N; ++i) {
-				if (valid[i]) {
-					buffer[i].~T();
-					valid[i] = false;
-				}
-			}
-		}
+    private:
+        /**
+         * Destructs the items in the array if they are not trivial destructible
+         * @warning destruction can throw
+         * @tparam X - Datatype of buffer stored in array
+         * @return Decides which methods get generated
+         */
+        template<class X>
+        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) internal_clear_items() {
+            for (size_t i = 0; i < N; i += 1) {
+                if (valid[i]) {
+                    // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
+                    buffer[i].~T();
+                    valid[i] = false;
+                }
+            }
+        }
 
-		template<class X>
-		EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) internal_clear_items() {
-			for (size_t i = 0; i < N; ++i) {
-				valid[i] = false;
-			}
-		}
+        template<class X>
+        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) internal_clear_items() {
+            for (size_t i = 0; i < N; i += 1) {
+                valid[i] = false;
+            }
+        }
 
-		/**
-		 * Copies an array into the current array
-		 * @param arr - Array to be copied
-		 */
-		void internal_copy_assign(const array<T, N> &arr) {
-			this->internal_clear_items<T>();
-			for (size_t i = 0; i < N; ++i) {
-				if (arr.valid[i]) {
-					new(buffer + i) T(arr[i]);
-					valid[i] = true;
-				}
-			}
-		}
+        /**
+         * Copies an array into the current array
+         * @param arr - Array to be copied
+         */
+        void internal_copy_assign(const array<T, N> &arr) {
+            this->internal_clear_items<T>();
 
-		/**
-		 * Inserts an item at val <br>
-		 * Destructs items if not trivial destructible
-		 * @tparam X - Datatype of buffer stored in array
-		 * @param index - Index of new item
-		 * @param item - Item to be inserted
-		 * @return Decides which methods get generated
-		 */
-		template<class X>
-		EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_copy_insert(size_t index, const T &item) {
-			if (valid[index]) {
-				buffer[index].~T();
-			}
-			new(buffer + index) T(item);
-			valid[index] = true;
-		}
+            for (size_t i = 0; i < N; i += 1) {
+                if (arr.valid[i]) {
+                    new(buffer + i) T(arr[i]);
+                    valid[i] = true;
+                }
+            }
+        }
 
-		template<class X>
-		EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_copy_insert(size_t index, const T &item) {
-			new(buffer + index) T(item);
-			valid[index] = true;
-		}
+        /**
+         * Inserts an item at index <br>
+         * Destructs items if not trivial destructible
+         * @warning destruction can throw
+         * @tparam X - Datatype of buffer stored in array
+         * @param index - Index of new item
+         * @param item - Item to be inserted
+         * @return Decides which methods get generated
+         */
+        template<class X>
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_copy_insert(size_t index, const T &item) {
+            if (valid[index]) {
+                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
+                buffer[index].~T();
+            }
 
-		/**
-		 * Same as array&lt;T, N&gt;::internal_copy_insert(const T &, size_t) but moving instead of copying <br>
-		 * Destructs items if not trivial destructible
-		 * @tparam X - Datatype of buffer stored in array
-		 * @param index - Index of new item
-		 * @param item - Item to be inserted
-		 * @return Decides which methods get generated
-		 */
-		template<class X>
-		EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_move_insert(size_t index, T &&item) {
-			if (valid[index]) {
-				buffer[index].~T();
-			}
-			new(buffer + index) T(std::move(item));
-			valid[index] = true;
-		}
+            new(buffer + index) T(item);
+            valid[index] = true;
+        }
 
-		template<class X>
-		EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_move_insert(size_t index, T &&item) {
-			new(buffer + index) T(std::move(item));
-			valid[index] = true;
-		}
+        template<class X>
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_copy_insert(size_t index, const T &item) {
+            new(buffer + index) T(item);
+            valid[index] = true;
+        }
 
-		/**
-		 * Constructs item at val in buffer <br>
-		 * Destructs items if not trivial destructible
-		 * @tparam X - Datatype of buffer stored in array
-		 * @tparam Args - Unknown amount of arguments and their type
-		 * @param index - Index of new item
-		 * @param args - Arguments for the constructor
-		 * @return Decides which methods get generated
-		 */
-		template<class X, class... Args>
-		EXT_ARRAY_INTERNAL_EMPLACE_RETURN(false) internal_emplace(size_t index, Args &&... args) {
-			if (valid[index]) {
-				buffer[index].~T();
-			}
-			new(buffer + index) T(std::move(args)...);
-			valid[index] = true;
-		}
+        /**
+         * Same as array&lt;T, N&gt;::internal_copy_insert(const T &, size_t) but moving instead of copying <br>
+         * Destructs items if not trivial destructible
+         * @warning destruction can throw
+         * @tparam X - Datatype of buffer stored in array
+         * @param index - Index of new item
+         * @param item - Item to be inserted
+         * @return Decides which methods get generated
+         */
+        template<class X>
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_move_insert(size_t index, T &&item) {
+            if (valid[index]) {
+                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
+                buffer[index].~T();
+            }
 
-		template<class X, class... Args>
-		EXT_ARRAY_INTERNAL_EMPLACE_RETURN(true) internal_emplace(size_t index, Args &&... args) {
-			new(buffer + index) T(std::move(args)...);
-			valid[index] = true;
-		}
+            new(buffer + index) T(std::move(item));
+            valid[index] = true;
+        }
 
-	public:
-		/**
-		 * Default constructor
-		 */
-		array() : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {}
+        template<class X>
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_move_insert(size_t index, T &&item) {
+            new(buffer + index) T(std::move(item));
+            valid[index] = true;
+        }
 
+        /**
+         * Constructs item at index in buffer <br>
+         * Destructs items if not trivial destructible
+         * @warning destruction can throw
+         * @tparam X - Datatype of buffer stored in array
+         * @tparam Args - Unknown amount of arguments and their type
+         * @param index - Index of new item
+         * @param args - Arguments for the constructor
+         * @return Decides which methods get generated
+         */
+        template<class X, class... Args>
+        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(false) internal_emplace(size_t index, Args &&... args) {
+            if (valid[index]) {
+                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
+                buffer[index].~T();
+            }
 
-		/**
-		 * Copy constructs a array from a given array
-		 * @param arr - Array to be copied
-		 */
-		array(const array<T, N> &arr) : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {
-			try {
-				size_t i = 0;
-				for (auto item : arr) {
-					this->internal_copy_insert<T>(i, item);
-					++i;
-				}
-			} catch (...) {
-				this->~array();
+            new(buffer + index) T(std::move(args)...);
+            valid[index] = true;
+        }
 
-				throw;
-			}
-		}
+        template<class X, class... Args>
+        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(true) internal_emplace(size_t index, Args &&... args) {
+            new(buffer + index) T(std::move(args)...);
+            valid[index] = true;
+        }
 
-		/**
-		 * Move constructs array from given array
-		 * @param arr - Array to be moved
-		 */
-		array(array<T, N> &&arr) noexcept: buffer_size(0), buffer(nullptr) {
-			arr.swap(*this);
-		}
-
-		/**
-		 * Constructs array from initializer list <br>
-		 * @param list - List of items
-		 */
-		array(std::initializer_list<T> list) : buffer_size(list.size()), buffer(EXT_ARRAY_BUFFER_INIT(buffer_size)) {
-			size_t i = 0;
-			for (auto item : list) {
-				this->internal_copy_insert<T>(i, item);
-				++i;
-			}
-		}
-
-		/**
-		 * Destructor calls, if necessary, the destructor on all items of the array and then deletes the buffer
-		 */
-		~array() {
-			if (buffer != nullptr) {
-				this->internal_clear_items<T>();
-				::operator delete(buffer);
-				buffer = nullptr;
-			}
-		}
-
-		/**
-		 * Copy assignment operator
-		 * @param arr - Array to be copied
-		 * @return Self
-		 */
-		array<T, N> &operator=(const array<T, N> &arr) {
-			if (this != &arr) {
-				this->internal_copy_assign(arr);
-			}
-
-			return *this;
-		}
-
-		/**
-		 * Move assignment operator
-		 * @param arr - Array to be moved
-		 * @return Self
-		 */
-		array<T, N> &operator=(array<T, N> &&arr) noexcept {
-			if (this != &arr) {
-				arr.swap(*this);
-			}
-
-			return *this;
-		}
-
-		/**
-		 * Initializer list assignment operator
-		 * @param list - Initializer list
-		 * @return Self
-		 */
-		array<T, N> &operator=(std::initializer_list<T> list) {
-			if (list.size() > buffer_size) {
-				throw std::out_of_range("Initializer list bigger than array!");
-			}
-
-			this->internal_clear_items<T>();
-
-			size_t i = 0;
-			for (auto item : list) {
-				this->internal_copy_insert<T>(i, item);
-				++i;
-			}
-
-			return *this;
-		}
-
-		// ***************
-		// * Item Access *
-		// ***************
-		/**
-		 * Returns item reference at val i
-		 * @warning Doesn't check bounds
-		 * @param i - Index
-		 * @return Item reference
-		 */
-		T &operator[](size_t i) {
-			return buffer[i];
-		}
-
-		/**
-		 * Returns item reference at val i
-		 * @param i - Index
-		 * @return Item reference
-		 */
-		T &at(size_t i) {
-			EXT_ARRAY_ASSERT_INDEX(i)
-
-			return buffer[i];
-		}
-
-		T *data() noexcept { return buffer; }
-
-		T &front() { return buffer[0]; }
-
-		T &front() const { return buffer[0]; }
-
-		T &back() { return buffer[buffer_size - 1]; }
-
-		T &back() const { return buffer[buffer_size - 1]; }
+    public:
+        /**
+         * Default constructor
+         */
+        array() : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {}
 
 
-		// *************
-		// * Iterators *
-		// *************
-		iterator begin() { return buffer; }
+        /**
+         * Copy constructs a array from a given array
+         * @param arr - Array to be copied
+         */
+        array(const array<T, N> &arr) : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {
+            try {
+                this->internal_copy_assign(arr);
+            } catch (...) {
+                this->~array();
 
-		riterator rbegin() { return riterator(end()); }
+                throw;
+            }
+        }
 
-		const_iterator begin() const { return buffer; }
+        /**
+         * Move constructs array from given array
+         * @param arr - Array to be moved
+         */
+        array(array<T, N> &&arr) noexcept: buffer_size(0), buffer(nullptr) {
+            arr.swap(*this);
+        }
 
-		const_riterator rbegin() const { return const_riterator(end()); }
+        /**
+         * Constructs array from initializer list <br>
+         * @param list - List of items
+         */
+        array(std::initializer_list<T> list) : buffer_size(list.size()), buffer(EXT_ARRAY_BUFFER_INIT(buffer_size)) {
+            size_t i = 0;
+            for (auto item: list) {
+                this->internal_copy_insert<T>(i, item);
+                i += 1;
+            }
+        }
 
-		iterator end() { return buffer + buffer_size; }
+        /**
+         * Destructor calls, if necessary, the destructor on all items of the array and then deletes the buffer
+         */
+        ~array() {
+            if (buffer != nullptr) {
+                this->internal_clear_items<T>();
+                ::operator delete(buffer);
+                buffer = nullptr;
+            }
+        }
 
-		riterator rend() { return riterator(begin()); }
+        /**
+         * Copy assignment operator
+         * @param arr - Array to be copied
+         * @return Self
+         */
+        array<T, N> &operator=(const array<T, N> &arr) {
+            if (this != &arr) {
+                this->internal_copy_assign(arr);
+            }
 
-		const_iterator end() const { return buffer + buffer_size; }
+            return *this;
+        }
 
-		const_riterator rend() const { return const_riterator(begin()); }
+        /**
+         * Move assignment operator
+         * @param arr - Array to be moved
+         * @return Self
+         */
+        array<T, N> &operator=(array<T, N> &&arr) noexcept {
+            if (this != &arr) {
+                arr.swap(*this);
+            }
 
-		const_iterator cbegin() const { return begin(); }
+            return *this;
+        }
 
-		const_riterator crbegin() const { return rbegin(); }
+        /**
+         * Initializer list assignment operator
+         * @param list - Initializer list
+         * @return Self
+         */
+        array<T, N> &operator=(std::initializer_list<T> list) {
+            if (list.size() > buffer_size) {
+                throw std::out_of_range("Initializer list bigger than array!");
+            }
 
-		const_iterator cend() const { return end(); }
+            this->internal_clear_items<T>();
 
-		const_riterator crend() const { return rend(); }
+            size_t i = 0;
+            for (auto item: list) {
+                this->internal_copy_insert<T>(i, item);
+                i += 1;
+            }
+
+            return *this;
+        }
+
+        // ***************
+        // * Item Access *
+        // ***************
+        /**
+         * Returns item reference at index
+         * @warning Doesn't check bounds
+         * @param index - Index
+         * @return Item reference
+         */
+        T &operator[](size_t index) {
+            return buffer[index];
+        }
+
+        /**
+         * Returns const item reference at index
+         * @warning Doesn't check bounds
+         * @param index - Index
+         * @return Item reference
+         */
+        T &operator[](size_t index) const {
+            return buffer[index];
+        }
+
+        /**
+         * Returns item reference at index
+         * @param index - Index
+         * @return Item reference
+         */
+        T &at(size_t index) {
+            EXT_ARRAY_ASSERT_INDEX(index)
+
+            return buffer[index];
+        }
+
+        /**
+         * Returns const item reference at index
+         * @param index - Index
+         * @return Item reference
+         */
+        T &at(size_t index) const {
+            EXT_ARRAY_ASSERT_INDEX(index)
+
+            return buffer[index];
+        }
+
+        T *data() noexcept { return buffer; }
+
+        T &front() { return buffer[0]; }
+
+        T &front() const { return buffer[0]; }
+
+        T &back() { return buffer[buffer_size - 1]; }
+
+        T &back() const { return buffer[buffer_size - 1]; }
 
 
-		// ************
-		// * Capacity *
-		// ************
+        // *************
+        // * Iterators *
+        // *************
+        iterator begin() { return buffer; }
 
-		constexpr size_t size() const noexcept { return buffer_size; }
+        riterator rbegin() { return riterator(end()); }
+
+        const_iterator begin() const { return buffer; }
+
+        const_riterator rbegin() const { return const_riterator(end()); }
+
+        iterator end() { return buffer + buffer_size; }
+
+        riterator rend() { return riterator(begin()); }
+
+        const_iterator end() const { return buffer + buffer_size; }
+
+        const_riterator rend() const { return const_riterator(begin()); }
+
+        const_iterator cbegin() const { return begin(); }
+
+        const_riterator crbegin() const { return rbegin(); }
+
+        const_iterator cend() const { return end(); }
+
+        const_riterator crend() const { return rend(); }
 
 
-		// *************
-		// * Modifiers *
-		// *************
+        // ************
+        // * Capacity *
+        // ************
 
-		/**
-		 * Copy inserts item at val i
-		 * @param item - Item to be inserted
-		 * @param i - Index
-		 */
-		void insert(size_t i, const T &item) {
-			EXT_ARRAY_ASSERT_INDEX(i)
+        constexpr size_t size() const noexcept { return buffer_size; }
 
-			this->internal_copy_insert<T>(i, item);
-		}
 
-		/**
-		 * Move inserts item at val i
-		 * @param item - Item to be inserted
-		 * @param i - Index
-		 */
-		void insert(size_t i, T &&item) {
-			EXT_ARRAY_ASSERT_INDEX(i)
+        // *************
+        // * Modifiers *
+        // *************
 
-			this->internal_move_insert<T>(i, std::move(item));
-		}
+        /**
+         * Copy inserts item at index
+         * @param item - Item to be inserted
+         * @param index - Index
+         */
+        void insert(size_t index, const T &item) {
+            EXT_ARRAY_ASSERT_INDEX(index)
 
-		/**
-		 * Swaps the content of two arrays
-		 * @param arr - Array to swap with
-		 */
-		void swap(array<T, N> &arr) {
-			std::swap(buffer_size, arr.buffer_size);
-			std::swap(buffer, arr.buffer);
-		}
+            this->internal_copy_insert<T>(index, item);
+        }
 
-		/**
-		 * Constructs item in place at val i
-		 * @tparam Args - Unknown amount of arguments and their type
-		 * @param i - Index
-		 * @param args - Constructor arguments
-		 */
-		template<class... Args>
-		void emplace(size_t i, Args &&... args) {
-			EXT_ARRAY_ASSERT_INDEX(i)
+        /**
+         * Move inserts item at index
+         * @param item - Item to be inserted
+         * @param index - Index
+         */
+        void insert(size_t index, T &&item) {
+            EXT_ARRAY_ASSERT_INDEX(index)
 
-			this->internal_emplace<T>(i, std::move(args)...);
-		}
+            this->internal_move_insert<T>(index, std::move(item));
+        }
 
-		// ************************
-		// * Non-Member Functions *
-		// ************************
-		/**
-		 * Returns if two arrays items are the same
-		 * @param arr - Array to compare to
-		 * @return
-		 */
-		bool operator==(const array<T, N> &arr) {
-			for (size_t i = 0; i < N; ++i) {
-				if (buffer[i] != arr.buffer[i]) {
-					return false;
-				}
-			}
-			return true;
-		}
+        /**
+         * Swaps the content of two arrays
+         * @param arr - Array to swap with
+         */
+        void swap(array<T, N> &arr) {
+            std::swap(buffer_size, arr.buffer_size);
+            std::swap(buffer, arr.buffer);
+        }
 
-		/**
-		 * Returns if two arrays items are not the same
-		 * @param arr - Array to compare to
-		 * @return
-		 */
-		bool operator!=(const array<T, N> &arr) {
-			return !(*this == arr);
-		}
-	};
+        /**
+         * Constructs item in place at index
+         * @tparam Args - Unknown amount of arguments and their type
+         * @param index - Index
+         * @param args - Constructor arguments
+         */
+        template<class... Args>
+        void emplace(size_t index, Args &&... args) {
+            EXT_ARRAY_ASSERT_INDEX(index)
+
+            this->internal_emplace<T>(index, std::move(args)...);
+        }
+
+        // ************************
+        // * Non-Member Functions *
+        // ************************
+        /**
+         * Returns if two arrays items are the same
+         * @param arr - Array to compare to
+         * @return
+         */
+        bool operator==(const array<T, N> &arr) {
+            for (size_t i = 0; i < N; i += 1) {
+                if (buffer[i] != arr.buffer[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Returns if two arrays items are not the same
+         * @param arr - Array to compare to
+         * @return
+         */
+        bool operator!=(const array<T, N> &arr) {
+            return !(*this == arr);
+        }
+    };
 }
 
 #endif
