@@ -38,5 +38,5 @@ ext::linked_list<T> list;
 ```
 
 ## Thanks, Credits and Sources
-Thanks to [Martin York](https://github.com/Loki-Astari) for the really good [series on vectors](https://lokiastari.com/blog/2016/02/27/vector/val.html). <br>
+Thanks to [Martin York](https://github.com/Loki-Astari) for the really good [series on vectors](https://lokiastari.com/posts/Vector-ResourceManagementAllocation). <br>
 Thanks to [Abdul Bari](https://www.youtube.com/channel/UCZCFT11CWBi3MHNlGf019nw) for his great video about [heaps](https://www.youtube.com/watch?v=HqPJF2L5h9U).
