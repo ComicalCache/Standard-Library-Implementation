@@ -8,6 +8,5 @@ Testing/Manual_Testing/
 **/CMakeFiles
 build
 .vscode
-html/
-latex/
+Doxygen_Out/
 **/.DS_Store
