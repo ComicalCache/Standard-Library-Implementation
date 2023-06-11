@@ -36,7 +36,6 @@ namespace ext {
     private:
         /**
          * Destructs the items in the array if they are not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in array
          * @return Decides which methods get generated
          */
@@ -44,7 +43,6 @@ namespace ext {
         EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) _internal_clear_items() {
             for (size_t i = 0; i < N; i += 1) {
                 if (valid[i]) {
-                    // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                     buffer[i].~T();
                     valid[i] = false;
                 }
@@ -76,7 +74,6 @@ namespace ext {
         /**
          * Inserts an item at index <br>
          * Destructs items if not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in array
          * @param index - Index of new item
          * @param item - Item to be inserted
@@ -85,7 +82,6 @@ namespace ext {
         template<class X>
         EXT_ARRAY_INTERNAL_INSERT_RETURN(false) _internal_copy_insert(size_t index, const T &item) {
             if (valid[index]) {
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
             }
 
@@ -102,7 +98,6 @@ namespace ext {
         /**
          * Same as array&lt;T, N&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying <br>
          * Destructs items if not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in array
          * @param index - Index of new item
          * @param item - Item to be inserted
@@ -111,7 +106,6 @@ namespace ext {
         template<class X>
         EXT_ARRAY_INTERNAL_INSERT_RETURN(false) _internal_move_insert(size_t index, T &&item) {
             if (valid[index]) {
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
             }
 
@@ -128,7 +122,6 @@ namespace ext {
         /**
          * Constructs item at index in buffer <br>
          * Destructs items if not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in array
          * @tparam Args - Unknown amount of arguments and their type
          * @param index - Index of new item
@@ -138,7 +131,6 @@ namespace ext {
         template<class X, class... Args>
         EXT_ARRAY_INTERNAL_EMPLACE_RETURN(false) _internal_emplace(size_t index, Args &&... args) {
             if (valid[index]) {
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
             }
 

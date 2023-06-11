@@ -148,14 +148,12 @@ namespace ext {
 
         /**
          * Destructs the items in the Vector if they are not trivial destructible, else just sets the item counter to 0
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in Vector
          * @return Decides which methods get generated
          */
         template<class X>
         EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(false) _internal_clear_items() {
             for (size_t i = 0; i < item_counter; i += 1) {
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[i].~T();
             }
             item_counter = 0;
@@ -201,7 +199,7 @@ namespace ext {
         /**
          * Erases the item at index and shifts all trailing items one to the left <br>
          * Destructs item if not trivial destructible
-         * @warning destruction can throw and no bounds checking
+         * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Item to be erased
          * @return Decides which methods get generated
@@ -210,7 +208,6 @@ namespace ext {
         EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(false) _internal_shift_left(size_t index) {
             item_counter -= 1;
             for (size_t i = index; i < item_counter; i += 1) {
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[i].~T();
                 this->_internal_move_or_copy<T>(i + 1, i);
             }
@@ -228,7 +225,7 @@ namespace ext {
         /**
          * Shifts items in Vector one to the right
          * Destructs items if not trivial destructible
-         * @warning destruction can throw and no bounds checking
+         * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Starting point for shift
          * @return Decides which methods get generated
@@ -237,7 +234,6 @@ namespace ext {
         EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(false) _internal_shift_right(size_t index) {
             for (size_t i = item_counter; i > index; i -= 1) {
                 this->_internal_move_or_copy<T>(i - 1, i);
-                // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[i - 1].~T();
             }
         }
@@ -253,7 +249,7 @@ namespace ext {
          * Inserts an item at index, copy shifting already existing items to the right
          * using Vector&lt;T&gt;::_internal_shift_right&lt;T&gt;(size_t) <br>
          * Destructs items if not trivial destructible
-         * @warning destruction can throw and no bounds checking
+         * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index of new item
          * @param item - Item to be inserted
@@ -263,7 +259,6 @@ namespace ext {
         EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_copy_insert(size_t index, const T &item) {
             this->_internal_shift_right<T>(index);
 
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(item);
             item_counter += 1;
@@ -279,7 +274,7 @@ namespace ext {
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying
-         * @warning destruction can throw and no bounds checking
+         * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index of new item
          * @param item - Item to be inserted
@@ -289,7 +284,6 @@ namespace ext {
         EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_move_insert(size_t index, T &&item) {
             this->_internal_shift_right<T>(index);
 
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(std::move(item));
             item_counter += 1;
@@ -307,7 +301,7 @@ namespace ext {
          * Constructs item at index in buffer, shifting already existing items one to the right
          * using Vector&lt;T&gt;::_internal_shift_right&lt;T&gt;(size_t) <br>
          * Destructs items if not trivial destructible
-         * @warning destruction can throw and no bounds checking
+         * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @tparam Args - Unknown amount of arguments and their type
          * @param index - Index of new item
@@ -318,7 +312,6 @@ namespace ext {
         EXT_VECTOR_INTERNAL_EMPLACE_RETURN(false) _internal_emplace(size_t index, Args &&... args) {
             this->_internal_shift_right<T>(index);
 
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(std::move(args)...);
             item_counter += 1;
@@ -335,14 +328,12 @@ namespace ext {
         /**
          * Removes the last item from the Vector <br>
          * Destructs the item if not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in Vector
          * @return Decides which methods get generated
          */
         template<class X>
         EXT_VECTOR_INTERNAL_POP_BACK_RETURN(false) _internal_pop_back() {
             item_counter -= 1;
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[item_counter].~T();
         }
 
@@ -354,7 +345,6 @@ namespace ext {
         /**
          * Copies item and replaces index with it <br>
          * Destructs the item if not trivial destructible
-         * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index to replace
          * @param item - Item to replace with
@@ -362,7 +352,6 @@ namespace ext {
          */
         template<class X>
         EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(false) _internal_copy_replace(size_t index, const T &item) {
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(item);
         }
@@ -377,7 +366,6 @@ namespace ext {
          */
         template<class X>
         EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(false) _internal_move_replace(size_t index, T &&item) {
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(std::move(item));
         }
@@ -392,7 +380,6 @@ namespace ext {
          */
         template<class X, class... Args>
         EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(false) _internal_emplace_replace(size_t index, Args &&... args) {
-            // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
             buffer[index].~T();
             new(buffer + index) T(std::move(args)...);
         }
@@ -652,7 +639,6 @@ namespace ext {
         /**
          * Clears the Vector <br>
          * Destructs all items if not trivial destructible
-         * @warning Destruction can throw
          */
         void clear() {
             this->_internal_clear_items<T>();
@@ -661,7 +647,6 @@ namespace ext {
         /**
          * Erases item at index <br>
          * Destructs item if not trivial destructible
-         * @warning Destruction can throw
          * @param index - Index
          */
         void erase(size_t index) {
