@@ -65,9 +65,14 @@ namespace ext {
         /**
          * Changes the size of the buffer on demand to make room for more items
          */
-        void _internal_resize_on_demand() {
-            if (item_counter >= buffer_size) {
-                this->_internal_resize(buffer_size * EXT_VECTOR_SCALE_FACTOR);
+        void _internal_resize_on_demand(size_t newItems) {
+            if (item_counter + newItems > buffer_size) {
+                double newSize = buffer_size;
+                while ((size_t) newSize < item_counter + newItems) {
+                    newSize *= EXT_VECTOR_SCALE_FACTOR;
+                }
+
+                this->_internal_resize((size_t) newSize);
             }
         }
 
@@ -672,7 +677,7 @@ namespace ext {
          */
         void insert(size_t index, const T &item) {
             EXT_VECTOR_ASSERT_INDEX(index)
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_copy_insert<T>(index, item);
         }
@@ -684,7 +689,7 @@ namespace ext {
          */
         void insert(size_t index, T &&item) {
             EXT_VECTOR_ASSERT_INDEX(index)
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_move_insert<T>(index, std::move(item));
         }
@@ -694,7 +699,7 @@ namespace ext {
          * @param item - Item to be pushed
          */
         void push_back(const T &item) {
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_push_back(item);
         }
@@ -704,7 +709,7 @@ namespace ext {
          * @param item - Item to be pushed
          */
         void push_back(T &&item) {
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_move_back(std::move(item));
         }
@@ -755,7 +760,7 @@ namespace ext {
          */
         template<class... Args>
         void emplace_back(Args &&... args) {
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_emplace_back(std::move(args)...);
         }
@@ -769,7 +774,7 @@ namespace ext {
         template<class... Args>
         void emplace(size_t index, Args &&... args) {
             EXT_VECTOR_ASSERT_INDEX(index)
-            this->_internal_resize_on_demand();
+            this->_internal_resize_on_demand(1);
 
             this->_internal_emplace<T>(index, std::move(args)...);
         }

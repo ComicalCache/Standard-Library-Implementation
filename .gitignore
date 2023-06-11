@@ -8,4 +8,6 @@ Testing/Manual_Testing/
 **/CMakeFiles
 build
 .vscode
+html/
+latex/
 **/.DS_Store

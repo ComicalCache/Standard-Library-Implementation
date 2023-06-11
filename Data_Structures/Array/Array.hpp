@@ -41,7 +41,7 @@ namespace ext {
          * @return Decides which methods get generated
          */
         template<class X>
-        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) internal_clear_items() {
+        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) _internal_clear_items() {
             for (size_t i = 0; i < N; i += 1) {
                 if (valid[i]) {
                     // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
@@ -52,7 +52,7 @@ namespace ext {
         }
 
         template<class X>
-        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) internal_clear_items() {
+        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) _internal_clear_items() {
             for (size_t i = 0; i < N; i += 1) {
                 valid[i] = false;
             }
@@ -62,8 +62,8 @@ namespace ext {
          * Copies an array into the current array
          * @param arr - Array to be copied
          */
-        void internal_copy_assign(const array<T, N> &arr) {
-            this->internal_clear_items<T>();
+        void _internal_copy_assign(const array<T, N> &arr) {
+            this->_internal_clear_items<T>();
 
             for (size_t i = 0; i < N; i += 1) {
                 if (arr.valid[i]) {
@@ -83,7 +83,7 @@ namespace ext {
          * @return Decides which methods get generated
          */
         template<class X>
-        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_copy_insert(size_t index, const T &item) {
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) _internal_copy_insert(size_t index, const T &item) {
             if (valid[index]) {
                 // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
@@ -94,13 +94,13 @@ namespace ext {
         }
 
         template<class X>
-        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_copy_insert(size_t index, const T &item) {
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) _internal_copy_insert(size_t index, const T &item) {
             new(buffer + index) T(item);
             valid[index] = true;
         }
 
         /**
-         * Same as array&lt;T, N&gt;::internal_copy_insert(const T &, size_t) but moving instead of copying <br>
+         * Same as array&lt;T, N&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying <br>
          * Destructs items if not trivial destructible
          * @warning destruction can throw
          * @tparam X - Datatype of buffer stored in array
@@ -109,7 +109,7 @@ namespace ext {
          * @return Decides which methods get generated
          */
         template<class X>
-        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) internal_move_insert(size_t index, T &&item) {
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(false) _internal_move_insert(size_t index, T &&item) {
             if (valid[index]) {
                 // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
@@ -120,7 +120,7 @@ namespace ext {
         }
 
         template<class X>
-        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) internal_move_insert(size_t index, T &&item) {
+        EXT_ARRAY_INTERNAL_INSERT_RETURN(true) _internal_move_insert(size_t index, T &&item) {
             new(buffer + index) T(std::move(item));
             valid[index] = true;
         }
@@ -136,7 +136,7 @@ namespace ext {
          * @return Decides which methods get generated
          */
         template<class X, class... Args>
-        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(false) internal_emplace(size_t index, Args &&... args) {
+        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(false) _internal_emplace(size_t index, Args &&... args) {
             if (valid[index]) {
                 // * this can throw if the type is not nothrow_destructible, but it's on the caller to check this
                 buffer[index].~T();
@@ -147,7 +147,7 @@ namespace ext {
         }
 
         template<class X, class... Args>
-        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(true) internal_emplace(size_t index, Args &&... args) {
+        EXT_ARRAY_INTERNAL_EMPLACE_RETURN(true) _internal_emplace(size_t index, Args &&... args) {
             new(buffer + index) T(std::move(args)...);
             valid[index] = true;
         }
@@ -165,7 +165,7 @@ namespace ext {
          */
         array(const array<T, N> &arr) : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {
             try {
-                this->internal_copy_assign(arr);
+                this->_internal_copy_assign(arr);
             } catch (...) {
                 this->~array();
 
@@ -188,7 +188,7 @@ namespace ext {
         array(std::initializer_list<T> list) : buffer_size(list.size()), buffer(EXT_ARRAY_BUFFER_INIT(buffer_size)) {
             size_t i = 0;
             for (auto item: list) {
-                this->internal_copy_insert<T>(i, item);
+                this->_internal_copy_insert<T>(i, item);
                 i += 1;
             }
         }
@@ -198,7 +198,7 @@ namespace ext {
          */
         ~array() {
             if (buffer != nullptr) {
-                this->internal_clear_items<T>();
+                this->_internal_clear_items<T>();
                 ::operator delete(buffer);
                 buffer = nullptr;
             }
@@ -211,7 +211,7 @@ namespace ext {
          */
         array<T, N> &operator=(const array<T, N> &arr) {
             if (this != &arr) {
-                this->internal_copy_assign(arr);
+                this->_internal_copy_assign(arr);
             }
 
             return *this;
@@ -240,11 +240,11 @@ namespace ext {
                 throw std::out_of_range("Initializer list bigger than array!");
             }
 
-            this->internal_clear_items<T>();
+            this->_internal_clear_items<T>();
 
             size_t i = 0;
             for (auto item: list) {
-                this->internal_copy_insert<T>(i, item);
+                this->_internal_copy_insert<T>(i, item);
                 i += 1;
             }
 
@@ -354,7 +354,7 @@ namespace ext {
         void insert(size_t index, const T &item) {
             EXT_ARRAY_ASSERT_INDEX(index)
 
-            this->internal_copy_insert<T>(index, item);
+            this->_internal_copy_insert<T>(index, item);
         }
 
         /**
@@ -365,7 +365,7 @@ namespace ext {
         void insert(size_t index, T &&item) {
             EXT_ARRAY_ASSERT_INDEX(index)
 
-            this->internal_move_insert<T>(index, std::move(item));
+            this->_internal_move_insert<T>(index, std::move(item));
         }
 
         /**
@@ -387,7 +387,7 @@ namespace ext {
         void emplace(size_t index, Args &&... args) {
             EXT_ARRAY_ASSERT_INDEX(index)
 
-            this->internal_emplace<T>(index, std::move(args)...);
+            this->_internal_emplace<T>(index, std::move(args)...);
         }
 
         // ************************
