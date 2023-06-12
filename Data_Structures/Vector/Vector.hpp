@@ -508,9 +508,10 @@ namespace ext {
          */
         vector<T> &operator=(std::initializer_list<T> list) {
             this->_internal_clear_items<T>();
+            this->_internal_resize_on_demand(list.size());
 
             for (auto item: list) {
-                this->push_back(item);
+                this->_internal_push_back(item);
             }
 
             return *this;
@@ -697,6 +698,18 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_move_back(std::move(item));
+        }
+
+        /**
+         * Pushes an initializer list at the end of the vector
+         * @param list - List to be pushed
+         */
+        void push_back(std::initializer_list<T> list) {
+            this->_internal_resize_on_demand(list.size());
+
+            for (auto i : list) {
+                this->_internal_push_back(i);
+            }
         }
 
         /**

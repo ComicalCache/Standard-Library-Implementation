@@ -404,6 +404,24 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Push_Back_Method) {
 	BOOST_TEST(vec3[2].status == MOVE_CONSTRUCTOR);
 }
 
+BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Push_Back_Method) {
+    ext::vector<int> vec1(2);
+    ext::vector<std::string> vec2(2);
+    ext::vector<testObj> vec3(2);
+
+    vec1.push_back({0, 1, 2});
+    vec2.push_back({"0", "1", "2"});
+    vec3.push_back({testObj(0), testObj(1), testObj(2)});
+
+    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+
+    for (int i = 0; i < 3; ++i) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
+        BOOST_TEST(vec3[i].val == i);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(Vector_Pop_Back_Method) {
 	ext::vector<int> vec1({0, 1, 2});
 	ext::vector<std::string> vec2({"0", "1", "2"});
