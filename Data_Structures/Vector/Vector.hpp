@@ -223,25 +223,26 @@ namespace ext {
         }
 
         /**
-         * Shifts items in Vector one to the right
+         * Shifts items right of index in Vector offset to the right
          * Destructs items if not trivial destructible
          * @warning no bounds checking
          * @tparam X - Datatype of buffer stored in Vector
          * @param index - Starting point for shift
+         * @param offset - Amount to shift
          * @return Decides which methods get generated
          */
         template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(false) _internal_shift_right(size_t index) {
-            for (size_t i = item_counter; i > index; i -= 1) {
-                this->_internal_move_or_copy<T>(i - 1, i);
-                buffer[i - 1].~T();
+        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(false) _internal_shift_right(size_t index, size_t offset) {
+            for (size_t i = item_counter - 1; i >= index; i -= 1) {
+                this->_internal_move_or_copy<T>(i, i + offset);
+                buffer[i].~T();
             }
         }
 
         template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(true) _internal_shift_right(size_t index) {
-            for (size_t i = item_counter; i > index; i -= 1) {
-                this->_internal_move_or_copy<T>(i - 1, i);
+        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(true) _internal_shift_right(size_t index, size_t offset) {
+            for (size_t i = item_counter - 1; i >= index; i -= 1) {
+                this->_internal_move_or_copy<T>(i, i + offset);
             }
         }
 
@@ -257,7 +258,7 @@ namespace ext {
          */
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_copy_insert(size_t index, const T &item) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             buffer[index].~T();
             new(buffer + index) T(item);
@@ -266,7 +267,7 @@ namespace ext {
 
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_copy_insert(size_t index, const T &item) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             new(buffer + index) T(item);
             item_counter += 1;
@@ -282,7 +283,7 @@ namespace ext {
          */
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_move_insert(size_t index, T &&item) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             buffer[index].~T();
             new(buffer + index) T(std::move(item));
@@ -291,7 +292,7 @@ namespace ext {
 
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_move_insert(size_t index, T &&item) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             new(buffer + index) T(std::move(item));
             item_counter += 1;
@@ -310,7 +311,7 @@ namespace ext {
          */
         template<class X, class... Args>
         EXT_VECTOR_INTERNAL_EMPLACE_RETURN(false) _internal_emplace(size_t index, Args &&... args) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             buffer[index].~T();
             new(buffer + index) T(std::move(args)...);
@@ -319,11 +320,50 @@ namespace ext {
 
         template<class X, class... Args>
         EXT_VECTOR_INTERNAL_EMPLACE_RETURN(true) _internal_emplace(size_t index, Args &&... args) {
-            this->_internal_shift_right<T>(index);
+            this->_internal_shift_right<T>(index, 1);
 
             new(buffer + index) T(std::move(args)...);
             item_counter += 1;
         }
+
+
+        /**
+         * Copies an item at index, not destructing any existing element or shifting existing elements to the side
+         * @warning no bounds checking
+         * @param index - Index of new item
+         * @param item - Item to be inserted
+         * @return Decides which methods get generated
+         */
+        void _internal_copy_put(size_t index, const T &item) {
+            new(buffer + index) T(item);
+            item_counter += 1;
+        }
+
+
+        /**
+         * Moves an item at index, not destructing any existing element or shifting existing elements to the side
+         * @warning no bounds checking
+         * @param index - Index of new item
+         * @param item - Item to be inserted
+         * @return Decides which methods get generated
+         */
+        /*void _internal_move_put(size_t index, T &&item) {
+            new(buffer + index) T(std::move(item));
+            item_counter += 1;
+        }*/
+
+        /**
+         * Constructs an item at index, not destructing any existing element or shifting existing elements to the side
+         * @warning no bounds checking
+         * @param index - Index of new item
+         * @param item - Item to be inserted
+         * @return Decides which methods get generated
+         */
+        /*template<class... Args>
+        void _internal_emplace_put(size_t index, Args &&... args) {
+            new(buffer + index) T(std::move(args)...);
+            item_counter += 1;
+        }*/
 
         /**
          * Removes the last item from the Vector <br>
@@ -681,6 +721,22 @@ namespace ext {
         }
 
         /**
+         * Inserts an initializer list at index
+         * @param index - Index
+         * @param list - List to be pushed
+         */
+        void insert(size_t index, std::initializer_list<T> list) {
+            this->_internal_resize_on_demand(list.size());
+            this->_internal_shift_right<T>(index, list.size());
+
+            size_t i = index;
+            for (auto item : list) {
+                this->_internal_copy_put(i, item);
+                i += 1;
+            }
+        }
+
+        /**
          * Copy pushes item at the end of the Vector
          * @param item - Item to be pushed
          */
@@ -707,8 +763,8 @@ namespace ext {
         void push_back(std::initializer_list<T> list) {
             this->_internal_resize_on_demand(list.size());
 
-            for (auto i : list) {
-                this->_internal_push_back(i);
+            for (auto item : list) {
+                this->_internal_push_back(item);
             }
         }
 

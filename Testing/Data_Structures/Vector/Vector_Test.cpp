@@ -304,13 +304,13 @@ BOOST_AUTO_TEST_CASE(Vector_Erase_Method) {
 	}
 }
 
-#define INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK \
-BOOST_TEST(vec1.capacity() == 3); \
-BOOST_TEST(vec1.size() == 3); \
-BOOST_TEST(vec2.capacity() == 3); \
-BOOST_TEST(vec2.size() == 3); \
-BOOST_TEST(vec3.capacity() == 3); \
-BOOST_TEST(vec3.size() == 3);
+#define INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(s) \
+BOOST_TEST(vec1.capacity() == s); \
+BOOST_TEST(vec1.size() == s); \
+BOOST_TEST(vec2.capacity() == s); \
+BOOST_TEST(vec2.size() == s); \
+BOOST_TEST(vec3.capacity() == s); \
+BOOST_TEST(vec3.size() == s);
 
 BOOST_AUTO_TEST_CASE(Vector_Copy_Insert_Method) {
 	ext::vector<int> vec1({0, 2});
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(Vector_Copy_Insert_Method) {
 	BOOST_CHECK_THROW(vec2.insert(5, s), std::runtime_error);
 	BOOST_CHECK_THROW(vec3.insert(5, o), std::runtime_error);
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Insert_Method) {
 	BOOST_CHECK_THROW(vec2.insert(5, "1"), std::runtime_error);
 	BOOST_CHECK_THROW(vec3.insert(5, testObj(1)), std::runtime_error);
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
@@ -359,6 +359,24 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Insert_Method) {
 	}
 
 	BOOST_TEST(vec3[1].status == MOVE_CONSTRUCTOR);
+}
+
+BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Insert_Method) {
+    ext::vector<int> vec1({0, 3, 4, 5});
+    ext::vector<std::string> vec2({"0", "3", "4", "5"});
+    ext::vector<testObj> vec3({testObj(0), testObj(3), testObj(4), testObj(5)});
+
+    vec1.insert(1, {1, 2});
+    vec2.insert(1, {"1", "2"});
+    vec3.insert(1, {testObj(1), testObj(2)});
+
+    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(6)
+
+    for (int i = 0; i < 6; i += 1) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
+        BOOST_TEST(vec3[i].val == i);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(Vector_Copy_Push_Back_Method) {
@@ -373,7 +391,7 @@ BOOST_AUTO_TEST_CASE(Vector_Copy_Push_Back_Method) {
 	vec2.push_back(s);
 	vec3.push_back(o);
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
@@ -393,7 +411,7 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Push_Back_Method) {
 	vec2.push_back("2");
 	vec3.push_back(testObj(2));
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
@@ -413,7 +431,7 @@ BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Push_Back_Method) {
     vec2.push_back({"0", "1", "2"});
     vec3.push_back({testObj(0), testObj(1), testObj(2)});
 
-    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
     for (int i = 0; i < 3; ++i) {
         BOOST_TEST(vec1[i] == i);
@@ -522,7 +540,7 @@ BOOST_AUTO_TEST_CASE(Vector_Emplace_Back_Method) {
 	vec2.emplace_back("2");
 	vec3.emplace_back(2);
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
@@ -542,7 +560,7 @@ BOOST_AUTO_TEST_CASE(Vector_Emplace_Method) {
 	vec2.emplace(1, "1");
 	vec3.emplace(1, 1);
 
-	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK
+	INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(3)
 
 	for (int i = 0; i < 3; ++i) {
 		BOOST_TEST(vec1[i] == i);
