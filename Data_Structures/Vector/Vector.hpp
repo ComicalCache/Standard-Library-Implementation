@@ -11,8 +11,6 @@
 #define EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(b) typename std::enable_if<std::is_nothrow_move_constructible<X>::value == b>::type
 #define EXT_VECTOR_INTERNAL_SWAP_ITEMS_RETURN(b) typename std::enable_if<std::is_nothrow_move_constructible<X>::value == b>::type
 
-#define EXT_VECTOR_INTERNAL_COPY_ASSIGN_RETURN(b) typename std::enable_if<std::is_nothrow_destructible<X>::value == b>::type
-
 #define EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
 #define EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
 #define EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
@@ -60,6 +58,7 @@ namespace ext {
             vector<T> temp(newSize);
             this->_internal_simple_copy_vector_to<T>(temp);
             temp.swap(*this);
+            temp.~vector();
         }
 
         /**
@@ -166,25 +165,17 @@ namespace ext {
 
         /**
          * Copies a Vector into the current Vector; tries to avoid new buffer allocation if enough space has already
-         * been allocated to copy the Vector \b and if the items are no throw destructible, else it allocates a new buffer <br>
+         * been allocated to copy the Vector, else it allocates a new buffer <br>
          * Destructs items of current Vector if not trivial destructible
-         * @tparam X - Datatype of buffer stored in Vector
          * @param vec - Vector to be copied
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_COPY_ASSIGN_RETURN(false) _internal_copy_assign(const vector<X> &vec) {
-            vector<T> temp(vec);
-            temp.swap(*this);
-        }
-
-        template<class X>
-        EXT_VECTOR_INTERNAL_COPY_ASSIGN_RETURN(true) _internal_copy_assign(const vector<X> &vec) {
-            // if the buffer has enough memory allocated simply clear it and copy the elements
-            // no new memory allocation
+        void _internal_copy_assign(const vector<T> &vec) {
             this->_internal_clear_items<T>();
 
-            if (buffer_size <= vec.item_counter) {
+            // if the buffer has enough memory allocated simply copy the elements
+            // no new memory allocation
+            if (buffer_size >= vec.item_counter) {
                 for (size_t i = 0; i < vec.item_counter; i += 1) {
                     this->_internal_push_back(vec.buffer[i]);
                 }
@@ -193,6 +184,7 @@ namespace ext {
                 // aka. create new Vector of the Vector we want to copy and swap the current one with it
                 vector<T> temp(vec);
                 temp.swap(*this);
+                temp.~vector();
             }
         }
 
@@ -462,7 +454,7 @@ namespace ext {
         vector(const vector<T> &vec) : buffer_size(vec.buffer_size), item_counter(0),
                                        buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
             try {
-                this->_internal_copy_assign<T>(vec);
+                this->_internal_copy_assign(vec);
             } catch (...) {
                 this->~vector();
 
