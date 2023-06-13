@@ -47,14 +47,14 @@ namespace ext {
                     valid[i] = false;
                 }
             }
-        }
+        };
 
         template<class X>
         EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) _internal_clear_items() {
             for (size_t i = 0; i < N; i += 1) {
                 valid[i] = false;
             }
-        }
+        };
 
         /**
          * Copies an array into the current array
@@ -69,7 +69,7 @@ namespace ext {
                     valid[i] = true;
                 }
             }
-        }
+        };
 
         /**
          * Inserts an item at index <br>
@@ -87,13 +87,13 @@ namespace ext {
 
             new(buffer + index) T(item);
             valid[index] = true;
-        }
+        };
 
         template<class X>
         EXT_ARRAY_INTERNAL_INSERT_RETURN(true) _internal_copy_insert(size_t index, const T &item) {
             new(buffer + index) T(item);
             valid[index] = true;
-        }
+        };
 
         /**
          * Same as array&lt;T, N&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying <br>
@@ -111,13 +111,13 @@ namespace ext {
 
             new(buffer + index) T(std::move(item));
             valid[index] = true;
-        }
+        };
 
         template<class X>
         EXT_ARRAY_INTERNAL_INSERT_RETURN(true) _internal_move_insert(size_t index, T &&item) {
             new(buffer + index) T(std::move(item));
             valid[index] = true;
-        }
+        };
 
         /**
          * Constructs item at index in buffer <br>
@@ -136,19 +136,19 @@ namespace ext {
 
             new(buffer + index) T(std::move(args)...);
             valid[index] = true;
-        }
+        };
 
         template<class X, class... Args>
         EXT_ARRAY_INTERNAL_EMPLACE_RETURN(true) _internal_emplace(size_t index, Args &&... args) {
             new(buffer + index) T(std::move(args)...);
             valid[index] = true;
-        }
+        };
 
     public:
         /**
          * Default constructor
          */
-        array() : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {}
+        array() : buffer_size(N), buffer(EXT_ARRAY_BUFFER_INIT(N)) {};
 
 
         /**
@@ -163,7 +163,7 @@ namespace ext {
 
                 throw;
             }
-        }
+        };
 
         /**
          * Move constructs array from given array
@@ -171,7 +171,7 @@ namespace ext {
          */
         array(array<T, N> &&arr) noexcept: buffer_size(0), buffer(nullptr) {
             arr.swap(*this);
-        }
+        };
 
         /**
          * Constructs array from initializer list <br>
@@ -183,7 +183,7 @@ namespace ext {
                 this->_internal_copy_insert<T>(i, item);
                 i += 1;
             }
-        }
+        };
 
         /**
          * Destructor calls, if necessary, the destructor on all items of the array and then deletes the buffer
@@ -194,7 +194,7 @@ namespace ext {
                 ::operator delete(buffer);
                 buffer = nullptr;
             }
-        }
+        };
 
         /**
          * Copy assignment operator
@@ -207,7 +207,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         /**
          * Move assignment operator
@@ -220,7 +220,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         /**
          * Initializer list assignment operator
@@ -241,7 +241,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         // ***************
         // * Item Access *
@@ -254,7 +254,7 @@ namespace ext {
          */
         T &operator[](size_t index) {
             return buffer[index];
-        }
+        };
 
         /**
          * Returns const item reference at index
@@ -264,7 +264,7 @@ namespace ext {
          */
         T &operator[](size_t index) const {
             return buffer[index];
-        }
+        };
 
         /**
          * Returns item reference at index
@@ -275,7 +275,7 @@ namespace ext {
             EXT_ARRAY_ASSERT_INDEX(index)
 
             return buffer[index];
-        }
+        };
 
         /**
          * Returns const item reference at index
@@ -286,52 +286,52 @@ namespace ext {
             EXT_ARRAY_ASSERT_INDEX(index)
 
             return buffer[index];
-        }
+        };
 
-        T *data() noexcept { return buffer; }
+        T *data() noexcept { return buffer; };
 
-        T &front() { return buffer[0]; }
+        T &front() { return buffer[0]; };
 
-        T &front() const { return buffer[0]; }
+        T &front() const { return buffer[0]; };
 
-        T &back() { return buffer[buffer_size - 1]; }
+        T &back() { return buffer[buffer_size - 1]; };
 
-        T &back() const { return buffer[buffer_size - 1]; }
+        T &back() const { return buffer[buffer_size - 1]; };
 
 
         // *************
         // * Iterators *
         // *************
-        iterator begin() { return buffer; }
+        iterator begin() { return buffer; };
 
-        riterator rbegin() { return riterator(end()); }
+        riterator rbegin() { return riterator(end()); };
 
-        const_iterator begin() const { return buffer; }
+        const_iterator begin() const { return buffer; };
 
-        const_riterator rbegin() const { return const_riterator(end()); }
+        const_riterator rbegin() const { return const_riterator(end()); };
 
-        iterator end() { return buffer + buffer_size; }
+        iterator end() { return buffer + buffer_size; };
 
-        riterator rend() { return riterator(begin()); }
+        riterator rend() { return riterator(begin()); };
 
-        const_iterator end() const { return buffer + buffer_size; }
+        const_iterator end() const { return buffer + buffer_size; };
 
-        const_riterator rend() const { return const_riterator(begin()); }
+        const_riterator rend() const { return const_riterator(begin()); };
 
-        const_iterator cbegin() const { return begin(); }
+        const_iterator cbegin() const { return begin(); };
 
-        const_riterator crbegin() const { return rbegin(); }
+        const_riterator crbegin() const { return rbegin(); };
 
-        const_iterator cend() const { return end(); }
+        const_iterator cend() const { return end(); };
 
-        const_riterator crend() const { return rend(); }
+        const_riterator crend() const { return rend(); };
 
 
         // ************
         // * Capacity *
         // ************
 
-        constexpr size_t size() const noexcept { return buffer_size; }
+        constexpr size_t size() const noexcept { return buffer_size; };
 
 
         // *************
@@ -347,7 +347,7 @@ namespace ext {
             EXT_ARRAY_ASSERT_INDEX(index)
 
             this->_internal_copy_insert<T>(index, item);
-        }
+        };
 
         /**
          * Move inserts item at index
@@ -358,7 +358,7 @@ namespace ext {
             EXT_ARRAY_ASSERT_INDEX(index)
 
             this->_internal_move_insert<T>(index, std::move(item));
-        }
+        };
 
         /**
          * Swaps the content of two arrays
@@ -367,7 +367,7 @@ namespace ext {
         void swap(array<T, N> &arr) {
             std::swap(buffer_size, arr.buffer_size);
             std::swap(buffer, arr.buffer);
-        }
+        };
 
         /**
          * Constructs item in place at index
@@ -380,7 +380,7 @@ namespace ext {
             EXT_ARRAY_ASSERT_INDEX(index)
 
             this->_internal_emplace<T>(index, std::move(args)...);
-        }
+        };
 
         // ************************
         // * Non-Member Functions *
@@ -397,7 +397,7 @@ namespace ext {
                 }
             }
             return true;
-        }
+        };
 
         /**
          * Returns if two arrays items are not the same
@@ -406,7 +406,7 @@ namespace ext {
          */
         bool operator!=(const array<T, N> &arr) {
             return !(*this == arr);
-        }
+        };
     };
 }
 

@@ -47,7 +47,6 @@ namespace ext {
         size_t item_counter;
         T *buffer;
 
-    private:
         /**
          * Changes the size of the buffer
          * @warning Size is not validated, this can lead to memory leaks if Vector&lt;T&gt;::_internal_resize(size_t)
@@ -59,7 +58,7 @@ namespace ext {
             this->_internal_simple_copy_vector_to<T>(temp);
             temp.swap(*this);
             temp.~vector();
-        }
+        };
 
         /**
          * Changes the size of the buffer on demand to make room for more items
@@ -73,7 +72,7 @@ namespace ext {
 
                 this->_internal_resize((size_t) newSize);
             }
-        }
+        };
 
         /**
          * Copies item to end of buffer and increments the item counter
@@ -82,7 +81,7 @@ namespace ext {
         void _internal_push_back(const T &item) {
             new(buffer + item_counter) T(item);
             item_counter += 1;
-        }
+        };
 
         /**
          * Moves item to end of buffer and increments the item counter.
@@ -91,7 +90,7 @@ namespace ext {
         void _internal_move_back(T &&item) {
             new(buffer + item_counter) T(std::move(item));
             item_counter += 1;
-        }
+        };
 
         /**
          * Constructs item at the end of the buffer and increments the item counter
@@ -102,7 +101,7 @@ namespace ext {
         void _internal_emplace_back(Args &&... args) {
             new(buffer + item_counter) T(std::move(args)...);
             item_counter += 1;
-        }
+        };
 
         /**
          * Moves or copies an item from ori to dst <br>
@@ -117,12 +116,12 @@ namespace ext {
         template<class X>
         EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(false) _internal_move_or_copy(size_t ori, size_t dst) {
             new(buffer + dst) T(buffer[ori]);
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(true) _internal_move_or_copy(size_t ori, size_t dst) {
             new(buffer + dst) T(std::move(buffer[ori]));
-        }
+        };
 
         /**
          * Copy or move copy the current Vector into the destination Vector <br>
@@ -136,14 +135,14 @@ namespace ext {
             for (size_t i = 0; i < item_counter; i += 1) {
                 dst._internal_push_back(buffer[i]);
             }
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_SIMPLE_COPY_VECTOR_TO_RETURN(true) _internal_simple_copy_vector_to(vector<T> &dst) {
             for (size_t i = 0; i < item_counter; i += 1) {
                 dst._internal_move_back(std::move(buffer[i]));
             }
-        }
+        };
 
         /**
          * Destructs the items in the Vector if they are not trivial destructible, else just sets the item counter to 0
@@ -156,12 +155,12 @@ namespace ext {
                 buffer[i].~T();
             }
             item_counter = 0;
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(true) _internal_clear_items() {
             item_counter = 0;
-        }
+        };
 
         /**
          * Copies a Vector into the current Vector; tries to avoid new buffer allocation if enough space has already
@@ -186,7 +185,7 @@ namespace ext {
                 temp.swap(*this);
                 temp.~vector();
             }
-        }
+        };
 
         /**
          * Erases the item at index and shifts all trailing items one to the left <br>
@@ -204,7 +203,7 @@ namespace ext {
                 this->_internal_move_or_copy<T>(i + 1, i);
             }
             buffer[item_counter].~T();
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(true) _internal_shift_left(size_t index) {
@@ -212,7 +211,7 @@ namespace ext {
             for (size_t i = index; i < item_counter; i += 1) {
                 this->_internal_move_or_copy<T>(i + 1, i);
             }
-        }
+        };
 
         /**
          * Shifts items right of index in Vector offset to the right
@@ -229,14 +228,14 @@ namespace ext {
                 this->_internal_move_or_copy<T>(i, i + offset);
                 buffer[i].~T();
             }
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(true) _internal_shift_right(size_t index, size_t offset) {
             for (size_t i = item_counter - 1; i >= index; i -= 1) {
                 this->_internal_move_or_copy<T>(i, i + offset);
             }
-        }
+        };
 
         /**
          * Inserts an item at index, copy shifting already existing items to the right
@@ -255,7 +254,7 @@ namespace ext {
             buffer[index].~T();
             new(buffer + index) T(item);
             item_counter += 1;
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_copy_insert(size_t index, const T &item) {
@@ -263,7 +262,7 @@ namespace ext {
 
             new(buffer + index) T(item);
             item_counter += 1;
-        }
+        };
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying
@@ -280,7 +279,7 @@ namespace ext {
             buffer[index].~T();
             new(buffer + index) T(std::move(item));
             item_counter += 1;
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_move_insert(size_t index, T &&item) {
@@ -288,7 +287,7 @@ namespace ext {
 
             new(buffer + index) T(std::move(item));
             item_counter += 1;
-        }
+        };
 
         /**
          * Constructs item at index in buffer, shifting already existing items one to the right
@@ -308,7 +307,7 @@ namespace ext {
             buffer[index].~T();
             new(buffer + index) T(std::move(args)...);
             item_counter += 1;
-        }
+        };
 
         template<class X, class... Args>
         EXT_VECTOR_INTERNAL_EMPLACE_RETURN(true) _internal_emplace(size_t index, Args &&... args) {
@@ -316,8 +315,7 @@ namespace ext {
 
             new(buffer + index) T(std::move(args)...);
             item_counter += 1;
-        }
-
+        };
 
         /**
          * Copies an item at index, not destructing any existing element or shifting existing elements to the side
@@ -329,7 +327,7 @@ namespace ext {
         void _internal_copy_put(size_t index, const T &item) {
             new(buffer + index) T(item);
             item_counter += 1;
-        }
+        };
 
         /**
          * Moves an item at index, not destructing any existing element or shifting existing elements to the side
@@ -341,7 +339,7 @@ namespace ext {
         void _internal_move_put(size_t index, T &&item) {
             new(buffer + index) T(std::move(item));
             item_counter += 1;
-        }
+        };
 
         /**
          * Removes the last item from the Vector <br>
@@ -353,12 +351,12 @@ namespace ext {
         EXT_VECTOR_INTERNAL_POP_BACK_RETURN(false) _internal_pop_back() {
             item_counter -= 1;
             buffer[item_counter].~T();
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_POP_BACK_RETURN(true) _internal_pop_back() {
             item_counter -= 1;
-        }
+        };
 
         /**
          * Copies item and replaces index with it <br>
@@ -372,12 +370,12 @@ namespace ext {
         EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(false) _internal_copy_replace(size_t index, const T &item) {
             buffer[index].~T();
             new(buffer + index) T(item);
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(true) _internal_copy_replace(size_t index, const T &item) {
             new(buffer + index) T(item);
-        }
+        };
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_replace&lt;T&gt;(size_t, const T&) but with moving
@@ -386,12 +384,12 @@ namespace ext {
         EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(false) _internal_move_replace(size_t index, T &&item) {
             buffer[index].~T();
             new(buffer + index) T(std::move(item));
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(true) _internal_move_replace(size_t index, T &&item) {
             new(buffer + index) T(std::move(item));
-        }
+        };
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_replace&lt;T&gt;(size_t, const T&) but with emplacing
@@ -400,12 +398,12 @@ namespace ext {
         EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(false) _internal_emplace_replace(size_t index, Args &&... args) {
             buffer[index].~T();
             new(buffer + index) T(std::move(args)...);
-        }
+        };
 
         template<class X, class... Args>
         EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(true) _internal_emplace_replace(size_t index, Args &&... args) {
             new(buffer + index) T(std::move(args)...);
-        }
+        };
 
         /**
          * Swaps two items positions in the Vector <br>
@@ -422,7 +420,7 @@ namespace ext {
 
             this->_internal_copy_replace<T>(a, buffer[b]);
             this->_internal_copy_replace<T>(b, temp);
-        }
+        };
 
         template<class X>
         EXT_VECTOR_INTERNAL_SWAP_ITEMS_RETURN(true) _internal_swap_items_init(size_t a, size_t b) {
@@ -430,7 +428,7 @@ namespace ext {
 
             this->_internal_move_replace<T>(a, std::move(buffer[b]));
             this->_internal_move_replace<T>(b, std::move(temp));
-        }
+        };
 
     public:
         /**
@@ -438,14 +436,14 @@ namespace ext {
          * The Vector \b always allocates and has space for \b at \b least two items out of ease of implementing
          * and logical use for a list type
          */
-        vector() : buffer_size(2), item_counter(0), buffer(EXT_VECTOR_BUFFER_INIT(2)) {}
+        vector() : buffer_size(2), item_counter(0), buffer(EXT_VECTOR_BUFFER_INIT(2)) {};
 
         /**
          * Constructs Vector of size MAX(2, size)
          * @param size - Size of Vector
          */
         explicit vector(size_t size) : buffer_size(EXT_VECTOR_SIZE(size)), item_counter(0),
-                                       buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {}
+                                       buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {};
 
         /**
          * Copy constructs a Vector from a given Vector
@@ -460,7 +458,7 @@ namespace ext {
 
                 throw;
             }
-        }
+        };
 
         /**
          * Move constructs Vector from given Vector
@@ -468,7 +466,7 @@ namespace ext {
          */
         vector(vector<T> &&vec) noexcept: buffer_size(0), item_counter(0), buffer(nullptr) {
             vec.swap(*this);
-        }
+        };
 
         /**
          * Constructs Vector from initializer list <br>
@@ -480,7 +478,7 @@ namespace ext {
             for (auto item: list) {
                 this->_internal_push_back(item);
             }
-        }
+        };
 
         /**
          * Destructor calls, if necessary, the destructor on all items of the Vector and then deletes the buffer
@@ -491,7 +489,7 @@ namespace ext {
                 ::operator delete(buffer);
                 buffer = nullptr;
             }
-        }
+        };
 
         /**
          * Copy assignment operator
@@ -504,7 +502,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         /**
          * Move assignment operator
@@ -517,7 +515,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         /**
          * Initializer list assignment operator
@@ -533,7 +531,7 @@ namespace ext {
             }
 
             return *this;
-        }
+        };
 
         // ***************
         // * Item Access *
@@ -546,7 +544,7 @@ namespace ext {
          */
         T &operator[](size_t index) {
             return buffer[index];
-        }
+        };
 
         /**
          * Returns const item reference at index
@@ -556,7 +554,7 @@ namespace ext {
          */
         T &operator[](size_t index) const {
             return buffer[index];
-        }
+        };
 
         /**
          * Returns item reference at index
@@ -567,7 +565,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             return buffer[index];
-        }
+        };
 
         /**
          * Returns const item reference at index
@@ -578,55 +576,55 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             return buffer[index];
-        }
+        };
 
-        T *data() noexcept { return buffer; }
+        T *data() noexcept { return buffer; };
 
-        T &front() { return buffer[0]; }
+        T &front() { return buffer[0]; };
 
-        T &front() const { return buffer[0]; }
+        T &front() const { return buffer[0]; };
 
-        T &back() { return buffer[item_counter - 1]; }
+        T &back() { return buffer[item_counter - 1]; };
 
-        T &back() const { return buffer[item_counter - 1]; }
+        T &back() const { return buffer[item_counter - 1]; };
 
         // *************
         // * Iterators *
         // *************
-        iterator begin() { return buffer; }
+        iterator begin() { return buffer; };
 
-        riterator rbegin() { return riterator(end()); }
+        riterator rbegin() { return riterator(end()); };
 
-        const_iterator begin() const { return buffer; }
+        const_iterator begin() const { return buffer; };
 
-        const_riterator rbegin() const { return const_riterator(end()); }
+        const_riterator rbegin() const { return const_riterator(end()); };
 
-        iterator end() { return buffer + item_counter; }
+        iterator end() { return buffer + item_counter; };
 
-        riterator rend() { return riterator(begin()); }
+        riterator rend() { return riterator(begin()); };
 
-        const_iterator end() const { return buffer + item_counter; }
+        const_iterator end() const { return buffer + item_counter; };
 
-        const_riterator rend() const { return const_riterator(begin()); }
+        const_riterator rend() const { return const_riterator(begin()); };
 
-        const_iterator cbegin() const { return begin(); }
+        const_iterator cbegin() const { return begin(); };
 
-        const_riterator crbegin() const { return rbegin(); }
+        const_riterator crbegin() const { return rbegin(); };
 
-        const_iterator cend() const { return end(); }
+        const_iterator cend() const { return end(); };
 
-        const_riterator crend() const { return rend(); }
+        const_riterator crend() const { return rend(); };
 
         // ************
         // * Capacity *
         // ************
-        bool empty() noexcept { return item_counter == 0; }
+        bool empty() noexcept { return item_counter == 0; };
 
-        size_t size() const noexcept { return item_counter; }
+        size_t size() const noexcept { return item_counter; };
 
-        size_t capacity() const noexcept { return buffer_size; }
+        size_t capacity() const noexcept { return buffer_size; };
 
-        inline size_t max_capacity() const noexcept { return SIZE_MAX; }
+        inline size_t max_capacity() const noexcept { return SIZE_MAX; };
 
         /**
          * Allocates more memory for the buffer <br>
@@ -637,7 +635,7 @@ namespace ext {
             if (newSize > buffer_size) {
                 this->_internal_resize(newSize);
             }
-        }
+        };
 
         /**
          * Frees all memory the buffer allocated which is not currently occupied by items
@@ -650,7 +648,7 @@ namespace ext {
             if (std::is_nothrow_destructible<T>::value == true) {
                 temp.~vector();
             }
-        }
+        };
 
         // *************
         // * Modifiers *
@@ -661,7 +659,7 @@ namespace ext {
          */
         void clear() {
             this->_internal_clear_items<T>();
-        }
+        };
 
         /**
          * Erases item at index <br>
@@ -672,7 +670,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             this->_internal_shift_left<T>(index);
-        }
+        };
 
         /**
          * Copy inserts item at index
@@ -684,7 +682,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_copy_insert<T>(index, item);
-        }
+        };
 
         /**
          * Move inserts item at index
@@ -696,7 +694,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_move_insert<T>(index, std::move(item));
-        }
+        };
 
         /**
          * Inserts an initializer list at index
@@ -712,7 +710,7 @@ namespace ext {
                 this->_internal_copy_put(i, item);
                 i += 1;
             }
-        }
+        };
 
         /**
          * Copy inserts a vector at index
@@ -726,7 +724,7 @@ namespace ext {
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_copy_put(index + i, vec[i]);
             }
-        }
+        };
 
         /**
          * Move inserts a vector at index
@@ -740,7 +738,7 @@ namespace ext {
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_move_put(index + i, std::move(vec[i]));
             }
-        }
+        };
 
         /**
          * Copy pushes item at the end of the Vector
@@ -750,7 +748,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_push_back(item);
-        }
+        };
 
         /**
          * Move pushes item at the end of the Vector
@@ -760,7 +758,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_move_back(std::move(item));
-        }
+        };
 
         /**
          * Pushes an initializer list at the end of the vector
@@ -772,7 +770,7 @@ namespace ext {
             for (auto item: list) {
                 this->_internal_push_back(item);
             }
-        }
+        };
 
         /**
          * Copy pushes a vector at the end of the vector
@@ -784,7 +782,7 @@ namespace ext {
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_push_back(vec[i]);
             }
-        }
+        };
 
         /**
          * Move pushes a vector at the end of the vector
@@ -796,14 +794,14 @@ namespace ext {
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_move_back(std::move(vec[i]));
             }
-        }
+        };
 
         /**
          * Removes the last item of the Vector
          */
         void pop_back() {
             this->_internal_pop_back<T>();
-        }
+        };
 
         /**
          * Swaps the content of two vectors
@@ -813,7 +811,7 @@ namespace ext {
             std::swap(buffer_size, vec.buffer_size);
             std::swap(item_counter, vec.item_counter);
             std::swap(buffer, vec.buffer);
-        }
+        };
 
         /**
          * Swaps two items in the Vector
@@ -825,7 +823,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(b)
 
             this->_internal_swap_items_init<T>(a, b);
-        }
+        };
 
         /**
          * Resizes the Vector
@@ -835,7 +833,7 @@ namespace ext {
             for (size_t i = item_counter; i > size; i -= 1) {
                 this->_internal_pop_back<T>();
             }
-        }
+        };
 
         /**
          * Constructs item in place at index, shifting already existing item and all trailing items to the right
@@ -849,7 +847,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_emplace<T>(index, std::move(args)...);
-        }
+        };
 
         /**
          * Constructs item in place at end of Vector
@@ -861,7 +859,7 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_emplace_back(std::move(args)...);
-        }
+        };
 
         /**
          * Copies item and replaces index with it
@@ -872,7 +870,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             this->_internal_copy_replace<T>(index, item);
-        }
+        };
 
         /**
          * Moves item and replaces index with it
@@ -883,7 +881,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             this->_internal_move_replace<T>(index, std::move(item));
-        }
+        };
 
         /**
          * Constructs item and replaces index with it
@@ -896,7 +894,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
 
             this->_internal_emplace_replace<T>(index, std::move(args)...);
-        }
+        };
 
         // ************************
         // * Non-Member Functions *
@@ -917,7 +915,7 @@ namespace ext {
                 }
             }
             return true;
-        }
+        };
 
         /**
          * Returns if two vectors items are not the same
@@ -926,7 +924,7 @@ namespace ext {
          */
         bool operator!=(const vector<T> &vec) {
             return !(*this == vec);
-        }
+        };
     };
 }
 
