@@ -27,6 +27,10 @@
 #define EXT_VECTOR_SCALE_FACTOR 1.6
 
 namespace ext {
+    /**
+     * A dynamic sized container type storing T's
+     * @tparam T - Type to store
+     */
     template<class T>
     class vector {
     public:
@@ -568,7 +572,7 @@ namespace ext {
          * @param index - Index
          * @return Item reference
          */
-        T &operator[](size_t index) const {
+        const T &operator[](size_t index) const {
             return buffer[index];
         };
 

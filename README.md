@@ -7,8 +7,6 @@ Documentation for the functions/methods is provided via doxygen descriptions fro
 - Automated testing using Boost.Test
 
 ## Vector
-##### TODO: Add construction/assignment with iterable type
-##### TODO: Add insertion with iterators (maybe not)
 Header only implementation of a vector.
 ```cpp
 ext::vector<T> vec;
