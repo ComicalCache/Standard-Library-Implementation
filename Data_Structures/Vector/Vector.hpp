@@ -846,18 +846,6 @@ namespace ext {
         }
 
         /**
-         * Constructs item in place at end of Vector
-         * @tparam Args - Unknown amount of arguments and their type
-         * @param args - Constructor arguments
-         */
-        template<class... Args>
-        void emplace_back(Args &&... args) {
-            this->_internal_resize_on_demand(1);
-
-            this->_internal_emplace_back(std::move(args)...);
-        }
-
-        /**
          * Constructs item in place at index, shifting already existing item and all trailing items to the right
          * @tparam Args - Unknown amount of arguments and their type
          * @param index - Index
@@ -869,6 +857,18 @@ namespace ext {
             this->_internal_resize_on_demand(1);
 
             this->_internal_emplace<T>(index, std::move(args)...);
+        }
+
+        /**
+         * Constructs item in place at end of Vector
+         * @tparam Args - Unknown amount of arguments and their type
+         * @param args - Constructor arguments
+         */
+        template<class... Args>
+        void emplace_back(Args &&... args) {
+            this->_internal_resize_on_demand(1);
+
+            this->_internal_emplace_back(std::move(args)...);
         }
 
         /**
@@ -915,7 +915,6 @@ namespace ext {
          * @return
          */
         bool operator==(const vector<T> &vec) {
-            // return (item_counter == vec.item_counter) && (memcmp(buffer, vec.buffer, item_counter * sizeof(T)) == 0);
             if (this->item_counter != vec.item_counter) {
                 return false;
             }
