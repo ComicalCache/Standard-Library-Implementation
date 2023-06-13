@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 project(Cpp_std_lib)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 23)
 
 # Implementations
 add_subdirectory(Data_Structures/Array)

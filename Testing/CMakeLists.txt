@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.20)
 project(Testing)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 23)
 
 # Boost
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
