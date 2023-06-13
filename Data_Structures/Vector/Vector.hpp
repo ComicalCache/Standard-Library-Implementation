@@ -470,13 +470,29 @@ namespace ext {
 
         /**
          * Constructs Vector from initializer list <br>
-         * Allocates at least space for two items in all cases
+         * Allocates space for at least two items in all cases
          * @param list - List of items
          */
         vector(std::initializer_list<T> list) : buffer_size(EXT_VECTOR_SIZE(list.size())), item_counter(0),
                                                 buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
             for (auto item: list) {
                 this->_internal_push_back(item);
+            }
+        };
+
+        /**
+         * Constructs Vector from an iterator range <br>
+         * Allocates space for at least two items in all cases
+         * @tparam Iterator - The iterator type
+         * @param start - Start of range
+         * @param stop - End of range
+         */
+        template<typename Iterator>
+        vector(Iterator start, Iterator stop) : buffer_size(EXT_VECTOR_SIZE(std::distance(start, stop))),
+                                                item_counter(0), buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
+            while (start != stop) {
+                this->_internal_push_back(*start);
+                start += 1;
             }
         };
 
@@ -741,6 +757,27 @@ namespace ext {
         };
 
         /**
+         * Inserts an iterator range at index
+         * @tparam Iterator - The iterator type
+         * @param index - Index
+         * @param start - Start of range
+         * @param stop - End of range
+         */
+        template<typename Iterator>
+        void insert(size_t index, Iterator start, Iterator stop) {
+            size_t size = std::distance(start, stop);
+            this->_internal_resize_on_demand(size);
+            this->_internal_shift_right<T>(index, size);
+
+            size_t i = index;
+            while (start != stop) {
+                this->_internal_copy_put(i, *start);
+                start += 1;
+                i += 1;
+            }
+        }
+
+        /**
          * Copy pushes item at the end of the Vector
          * @param item - Item to be pushed
          */
@@ -795,6 +832,23 @@ namespace ext {
                 this->_internal_move_back(std::move(vec[i]));
             }
         };
+
+        /**
+         * Pushes an iterator range at the stop of the vector
+         * @tparam Iterator - The iterator type
+         * @param start - Start of range
+         * @param stop - End of range
+         */
+        template<typename Iterator>
+        void push_back(Iterator start, Iterator stop) {
+            size_t size = std::distance(start, stop);
+            this->_internal_resize_on_demand(size);
+
+            while (start != stop) {
+                this->_internal_push_back(*start);
+                start += 1;
+            }
+        }
 
         /**
          * Removes the last item of the Vector

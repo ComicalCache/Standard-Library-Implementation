@@ -21,19 +21,6 @@ BOOST_AUTO_TEST_CASE(Vector_Size_Constructor) {
     BOOST_TEST(vec.size() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Constructor) {
-    ext::vector<int> vec1({0, 1, 2});
-    ext::vector<std::string> vec2({"0", "1", "2"});
-
-    BOOST_TEST(vec1.size() == 3);
-    BOOST_TEST(vec1.capacity() == 3);
-
-    for (int i = 0; i < 3; ++i) {
-        BOOST_TEST(vec1[i] == i);
-        BOOST_TEST(vec2[i] == std::to_string(i));
-    }
-}
-
 BOOST_AUTO_TEST_CASE(Vector_Copy_Constructor) {
     ext::vector<int> vec1Original({0, 1, 2});
     ext::vector<int> vec1Copy(vec1Original);
@@ -81,6 +68,37 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Constructor) {
     for (int i = 0; i < 3; ++i) {
         BOOST_TEST(vec1Move[i] == i);
         BOOST_TEST(vec2Move[i] == std::to_string(i));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Vector_Initializer_List_Constructor) {
+    ext::vector<int> vec1({0, 1, 2});
+    ext::vector<std::string> vec2({"0", "1", "2"});
+
+    BOOST_TEST(vec1.size() == 3);
+    BOOST_TEST(vec1.capacity() == 3);
+
+    for (int i = 0; i < 3; ++i) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Vector_Iterator_Constructor) {
+    ext::vector<int> init1({0, 1, 2});
+    ext::vector<std::string> init2({"0", "1", "2"});
+
+    ext::vector<int> vec1(init1.begin(), init1.end());
+    ext::vector<std::string> vec2(init2.begin(), init2.end());
+
+    BOOST_TEST(vec1.size() == 3);
+    BOOST_TEST(vec1.capacity() == 3);
+    BOOST_TEST(vec2.size() == 3);
+    BOOST_TEST(vec2.capacity() == 3);
+
+    for (int i = 0; i < 3; i += 1) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
     }
 }
 
@@ -424,6 +442,28 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Vector_Insert_Method) {
     BOOST_TEST(vec3[1].status == MOVE_CONSTRUCTOR);
 }
 
+BOOST_AUTO_TEST_CASE(Vector_Iterator_Insert_Method) {
+    ext::vector<int> vec1({0, 3, 4, 5});
+    ext::vector<std::string> vec2({"0", "3", "4", "5"});
+    ext::vector<testObj> vec3({testObj(0), testObj(3), testObj(4), testObj(5)});
+
+    ext::vector<int> temp1({1, 2});
+    ext::vector<std::string> temp2({"1", "2"});
+    ext::vector<testObj> temp3({testObj(1), testObj(2)});
+
+    vec1.insert(1, temp1.begin(), temp1.end());
+    vec2.insert(1, temp2.begin(), temp2.end());
+    vec3.insert(1, temp3.begin(), temp3.end());
+
+    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(6)
+
+    for (int i = 0; i < 6; i += 1) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
+        BOOST_TEST(vec3[i].val == i);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(Vector_Copy_Push_Back_Method) {
     ext::vector<int> vec1({0, 1});
     ext::vector<std::string> vec2({"0", "1"});
@@ -527,6 +567,30 @@ BOOST_AUTO_TEST_CASE(Vector_Move_Vector_Push_Back_Method) {
     }
 
     BOOST_TEST(vec3[4].status == MOVE_CONSTRUCTOR);
+}
+
+BOOST_AUTO_TEST_CASE(Vector_Iterator_Push_Back_Method) {
+    ext::vector<int> vec1({0, 1, 2, 3});
+    ext::vector<std::string> vec2({"0", "1", "2", "3"});
+    ext::vector<testObj> vec3({testObj(0), testObj(1), testObj(2), testObj(3)});
+
+    ext::vector<int> temp1({4, 5});
+    ext::vector<std::string> temp2({"4", "5"});
+    ext::vector<testObj> temp3({testObj(4), testObj(5)});
+
+    vec1.push_back(temp1.begin(), temp1.end());
+    vec2.push_back(temp2.begin(), temp2.end());
+    vec3.push_back(temp3.begin(), temp3.end());
+
+    INSERT_PUSH_BACK_EMPLACE_CAPACITY_CHECK(6)
+
+    for (int i = 0; i < 6; i += 1) {
+        BOOST_TEST(vec1[i] == i);
+        BOOST_TEST(vec2[i] == std::to_string(i));
+        BOOST_TEST(vec3[i].val == i);
+    }
+
+    BOOST_TEST(vec3[4].status == COPY_CONSTRUCTOR);
 }
 
 BOOST_AUTO_TEST_CASE(Vector_Pop_Back_Method) {
