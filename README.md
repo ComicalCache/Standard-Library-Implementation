@@ -9,7 +9,6 @@ Documentation for the functions/methods is provided via doxygen descriptions fro
 ## Vector
 ##### TODO: Add construction/assignment with iterable type
 ##### TODO: Add insertion with iterators (maybe not)
-##### TODO: Add insert/push_back initializer list
 Header only implementation of a vector.
 ```cpp
 ext::vector<T> vec;

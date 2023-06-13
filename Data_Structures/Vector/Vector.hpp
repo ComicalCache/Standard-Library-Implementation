@@ -339,7 +339,6 @@ namespace ext {
             item_counter += 1;
         }
 
-
         /**
          * Moves an item at index, not destructing any existing element or shifting existing elements to the side
          * @warning no bounds checking
@@ -347,23 +346,10 @@ namespace ext {
          * @param item - Item to be inserted
          * @return Decides which methods get generated
          */
-        /*void _internal_move_put(size_t index, T &&item) {
+        void _internal_move_put(size_t index, T &&item) {
             new(buffer + index) T(std::move(item));
             item_counter += 1;
-        }*/
-
-        /**
-         * Constructs an item at index, not destructing any existing element or shifting existing elements to the side
-         * @warning no bounds checking
-         * @param index - Index of new item
-         * @param item - Item to be inserted
-         * @return Decides which methods get generated
-         */
-        /*template<class... Args>
-        void _internal_emplace_put(size_t index, Args &&... args) {
-            new(buffer + index) T(std::move(args)...);
-            item_counter += 1;
-        }*/
+        }
 
         /**
          * Removes the last item from the Vector <br>
@@ -730,9 +716,37 @@ namespace ext {
             this->_internal_shift_right<T>(index, list.size());
 
             size_t i = index;
-            for (auto item : list) {
+            for (auto item: list) {
                 this->_internal_copy_put(i, item);
                 i += 1;
+            }
+        }
+
+        /**
+         * Copy inserts a vector at index
+         * @param index - Index
+         * @param vec - Vector to insert
+         */
+        void insert(size_t index, vector<T> &vec) {
+            this->_internal_resize_on_demand(vec.size());
+            this->_internal_shift_right<T>(index, vec.size());
+
+            for (size_t i = 0; i < vec.size(); i += 1) {
+                this->_internal_copy_put(index + i, vec[i]);
+            }
+        }
+
+        /**
+         * Move inserts a vector at index
+         * @param index - Index
+         * @param vec - Vector to insert
+         */
+        void insert(size_t index, vector<T> &&vec) {
+            this->_internal_resize_on_demand(vec.size());
+            this->_internal_shift_right<T>(index, vec.size());
+
+            for (size_t i = 0; i < vec.size(); i += 1) {
+                this->_internal_move_put(index + i, std::move(vec[i]));
             }
         }
 
@@ -763,8 +777,32 @@ namespace ext {
         void push_back(std::initializer_list<T> list) {
             this->_internal_resize_on_demand(list.size());
 
-            for (auto item : list) {
+            for (auto item: list) {
                 this->_internal_push_back(item);
+            }
+        }
+
+        /**
+         * Copy pushes a vector at the end of the vector
+         * @param vec - Vector to push
+         */
+        void push_back(vector<T> &vec) {
+            this->_internal_resize_on_demand(vec.size());
+
+            for (size_t i = 0; i < vec.size(); i += 1) {
+                this->_internal_push_back(vec[i]);
+            }
+        }
+
+        /**
+         * Move pushes a vector at the end of the vector
+         * @param vec - Vector to push
+         */
+        void push_back(vector<T> &&vec) {
+            this->_internal_resize_on_demand(vec.size());
+
+            for (size_t i = 0; i < vec.size(); i += 1) {
+                this->_internal_move_back(std::move(vec[i]));
             }
         }
 
