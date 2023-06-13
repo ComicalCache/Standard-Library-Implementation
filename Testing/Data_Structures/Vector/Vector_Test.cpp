@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(Vector_Destructor) {
 
 BOOST_AUTO_TEST_CASE(Vector_Copy_Assigment_Operator) {
     ext::vector<int> vec1Original({0, 1, 2});
-    ext::vector<int> vec1Copy(2);
+    ext::vector<int> vec1Copy(2); // testing allocating/saving on allocating memory
     vec1Copy = vec1Original;
     ext::vector<std::string> vec2Original({"0", "1", "2"});
     ext::vector<std::string> vec2Copy = vec2Original;
