@@ -4,10 +4,12 @@
 #include <utility>
 #include <stdexcept>
 
-#define EXT_ARRAY_ASSERT_INDEX(i)  if (sizeof...(i) != this->_d) { throw std::runtime_error("indices of wrong dimension"); }
-#define EXT_ARRAY_ASSERT_DIMENSION_COUNT(n) if (n > this->_d) { throw std::runtime_error("too many dimension sizes"); }
+#define EXT_ARRAY_ASSERT_INDEX(i)  if (i >= this->_dsize) { throw std::runtime_error("val out of range"); }
+#define EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(n) if (n > this->_d) { throw std::runtime_error("too many dimension sizes"); }
+#define EXT_ARRAY_ASSERT_DIMENSION_COUNT(n) if (n < 1) { throw std::runtime_error("too few dimensions"); }
+#define EXT_ARRAY_ASSERT_DIMENSION_SIZE(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
 
-#define EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
+#define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, b) (std::is_trivially_destructible<T>::value == b)
 
 #define EXT_ARRAY_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
 #define EXT_ARRAY_DIMENSION_SIZE_INIT(N) (size_t *) ::operator new(N * sizeof(size_t))
@@ -64,14 +66,18 @@ namespace ext {
 
         template<typename... Ns>
         void _internal_constructor_work(size_t d, Ns... ns) {
+            EXT_ARRAY_ASSERT_DIMENSION_COUNT(d);
+
             this->_n = EXT_ARRAY_DIMENSION_SIZE_INIT(d);
             this->_d = d;
 
             size_t supplied_dims = sizeof...(Ns);
-            EXT_ARRAY_ASSERT_DIMENSION_COUNT(supplied_dims)
+            EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(supplied_dims)
 
             size_t index = 0;
             for (const auto i: {ns...}) {
+                EXT_ARRAY_ASSERT_DIMENSION_SIZE(i)
+
                 this->_n[index] = i;
                 index += 1;
             }
@@ -90,12 +96,12 @@ namespace ext {
             this->buffer = EXT_ARRAY_BUFFER_INIT(this->_size);
         };
 
-        template<class X>
-        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(false) _internal_clear_items() {
+        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
+            // TODO
         };
 
-        template<class X>
-        EXT_ARRAY_INTERNAL_CLEAR_ITEMS_RETURN(true) _internal_clear_items() {
+        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
+            // TODO
         };
 
     public:
@@ -110,8 +116,8 @@ namespace ext {
 
         ~array() {
             if (this->buffer != nullptr) {
-                this->_internal_clear_items<T>();
-                ::operator delete(buffer);
+                this->_internal_clear_items();
+                ::operator delete(this->buffer);
                 this->buffer = nullptr;
             }
         };
@@ -130,6 +136,23 @@ namespace ext {
 
         };
 
+        template<typename... Args>
+        T &at(Args... indices) {
+            size_t index = this->_internal_calculate_index(indices...);
+            EXT_ARRAY_ASSERT_INDEX(index)
+
+            return this->buffer[index];
+        };
+
+        template<typename... Args>
+        const T &at(Args... indices) const {
+            size_t index = this->_internal_calculate_index(indices...);
+            EXT_ARRAY_ASSERT_INDEX(index)
+
+            return this->buffer[index];
+
+        };
+
         // ************
         // * Capacity *
         // ************
@@ -138,7 +161,6 @@ namespace ext {
         };
 
         size_t length_of_dimension(size_t dim) {
-            // TODO: change this
             if (dim > this->_d || dim < 1) {
                 throw std::runtime_error("invalid index");
             }
