@@ -7,19 +7,8 @@
 
 #define EXT_VECTOR_ASSERT_INDEX(i)  if (i >= this->item_counter) { throw std::runtime_error("val out of range"); }
 
-#define EXT_VECTOR_INTERNAL_SIMPLE_COPY_VECTOR_TO_RETURN(b) typename std::enable_if<std::is_nothrow_move_constructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(b) typename std::enable_if<std::is_nothrow_move_constructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_SWAP_ITEMS_RETURN(b) typename std::enable_if<std::is_nothrow_move_constructible<X>::value == b>::type
-
-#define EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_INSERT_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_POP_BACK_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_EMPLACE_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
-#define EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(b) typename std::enable_if<std::is_trivially_destructible<X>::value == b>::type
+#define EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, b) (std::is_trivially_destructible<T>::value == b)
+#define EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, b) (std::is_nothrow_move_constructible<T>::value == b)
 
 #define EXT_VECTOR_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
 #define EXT_VECTOR_SIZE(x) (2>x?2:x)
@@ -59,7 +48,7 @@ namespace ext {
          */
         void _internal_resize(size_t newSize) {
             vector<T> temp(newSize);
-            this->_internal_simple_copy_vector_to<T>(temp);
+            this->_internal_simple_copy_vector_to(temp);
             temp.swap(*this);
         };
 
@@ -73,7 +62,8 @@ namespace ext {
                     newSize *= EXT_VECTOR_SCALE_FACTOR;
                 }
 
-                this->_internal_resize((size_t) newSize);
+                this->_internal_resize((size_t)
+                                               newSize);
             }
         };
 
@@ -120,37 +110,33 @@ namespace ext {
          * Move or copy are dependent on if the datatype stored in the Vector is nothrow move constructable or not <br>
          * Note that for a copy the item is now duplicate at ori and dst, for move ori is now an "empty" value
          * @warning bounds are not checked
-         * @tparam X  - Datatype of buffer stored in Vector
          * @param ori - Origin of item to be copied or moved
          * @param dst - Destination of move or copy
          * @return Decides which method gets generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(false) _internal_move_or_copy_from_to(size_t ori, size_t dst) {
+        void
+        _internal_move_or_copy_from_to(size_t ori, size_t dst) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, false) {
             new(this->buffer + dst) T(this->buffer[ori]);
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_MOVE_COPY_RETURN(true) _internal_move_or_copy_from_to(size_t ori, size_t dst) {
+        void
+        _internal_move_or_copy_from_to(size_t ori, size_t dst) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, true) {
             new(this->buffer + dst) T(std::move(this->buffer[ori]));
         };
 
         /**
          * Copy or move copy the current Vector into the destination Vector <br>
          * Move or copy are dependent on if the datatype stored in the Vector is nothrow move constructable or not
-         * @tparam X - Datatype of buffer stored in Vector
          * @param dst - Destination Vector
          * @return Decides which methods gets generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_SIMPLE_COPY_VECTOR_TO_RETURN(false) _internal_simple_copy_vector_to(vector<T> &dst) {
+        void _internal_simple_copy_vector_to(vector<T> &dst) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, false) {
             for (size_t i = 0; i < this->item_counter; i += 1) {
                 dst._internal_copy_put(this->item_counter, this->buffer[i]);
             }
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_SIMPLE_COPY_VECTOR_TO_RETURN(true) _internal_simple_copy_vector_to(vector<T> &dst) {
+        void _internal_simple_copy_vector_to(vector<T> &dst) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, true) {
             for (size_t i = 0; i < this->item_counter; i += 1) {
                 dst._internal_move_put(dst.item_counter, std::move(this->buffer[i]));
             }
@@ -158,19 +144,16 @@ namespace ext {
 
         /**
          * Destructs the items in the Vector if they are not trivial destructible, else just sets the item counter to 0
-         * @tparam X - Datatype of buffer stored in Vector
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(false) _internal_clear_items() {
+        void _internal_clear_items() requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             for (size_t i = 0; i < this->item_counter; i += 1) {
                 this->buffer[i].~T();
             }
             this->item_counter = 0;
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_CLEAR_ITEMS_RETURN(true) _internal_clear_items() {
+        void _internal_clear_items() requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             this->item_counter = 0;
         };
 
@@ -182,7 +165,7 @@ namespace ext {
          * @return Decides which methods get generated
          */
         void _internal_copy_assign(const vector<T> &vec) {
-            this->_internal_clear_items<T>();
+            this->_internal_clear_items();
 
             // if the buffer has enough memory allocated simply copy the elements
             // no new memory allocation
@@ -202,25 +185,22 @@ namespace ext {
          * Erases the item at index and shifts all trailing items one to the left <br>
          * Destructs item if not trivial destructible
          * @warning no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @param index - Item to be erased
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(false) _internal_shift_left(size_t index) {
+        void _internal_shift_left(size_t index) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             this->item_counter -= 1;
             for (size_t i = index; i < this->item_counter; i += 1) {
                 this->buffer[i].~T();
-                this->_internal_move_or_copy_from_to<T>(i + 1, i);
+                this->_internal_move_or_copy_from_to(i + 1, i);
             }
             this->buffer[this->item_counter].~T();
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_LEFT_RETURN(true) _internal_shift_left(size_t index) {
+        void _internal_shift_left(size_t index) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             this->item_counter -= 1;
             for (size_t i = index; i < this->item_counter; i += 1) {
-                this->_internal_move_or_copy_from_to<T>(i + 1, i);
+                this->_internal_move_or_copy_from_to(i + 1, i);
             }
         };
 
@@ -228,23 +208,20 @@ namespace ext {
          * Shifts items right of index in Vector offset to the right
          * Destructs items if not trivial destructible
          * @warning no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @param index - Starting point for shift
          * @param offset - Amount to shift
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(false) _internal_shift_right(size_t index, size_t offset) {
+        void _internal_shift_right(size_t index, size_t offset) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             for (size_t i = this->item_counter - 1; i >= index; i -= 1) {
-                this->_internal_move_or_copy_from_to<T>(i, i + offset);
+                this->_internal_move_or_copy_from_to(i, i + offset);
                 this->buffer[i].~T();
             }
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_SHIFT_RIGHT_RETURN(true) _internal_shift_right(size_t index, size_t offset) {
+        void _internal_shift_right(size_t index, size_t offset) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             for (size_t i = this->item_counter - 1; i >= index; i -= 1) {
-                this->_internal_move_or_copy_from_to<T>(i, i + offset);
+                this->_internal_move_or_copy_from_to(i, i + offset);
             }
         };
 
@@ -253,23 +230,20 @@ namespace ext {
          * using Vector&lt;T&gt;::_internal_shift_right&lt;T&gt;(size_t) <br>
          * Destructs items if not trivial destructible
          * @warning no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index of new item
          * @param item - Item to be inserted
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_copy_insert(size_t index, const T &item) {
-            this->_internal_shift_right<T>(index, 1);
+        void _internal_copy_insert(size_t index, const T &item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
+            this->_internal_shift_right(index, 1);
 
             this->buffer[index].~T();
             new(this->buffer + index) T(item);
             this->item_counter += 1;
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_copy_insert(size_t index, const T &item) {
-            this->_internal_shift_right<T>(index, 1);
+        void _internal_copy_insert(size_t index, const T &item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
+            this->_internal_shift_right(index, 1);
 
             new(this->buffer + index) T(item);
             this->item_counter += 1;
@@ -278,23 +252,20 @@ namespace ext {
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_insert(const T &, size_t) but moving instead of copying
          * @warning no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index of new item
          * @param item - Item to be inserted
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_INSERT_RETURN(false) _internal_move_insert(size_t index, T &&item) {
-            this->_internal_shift_right<T>(index, 1);
+        void _internal_move_insert(size_t index, T &&item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
+            this->_internal_shift_right(index, 1);
 
             this->buffer[index].~T();
             new(this->buffer + index) T(std::move(item));
             this->item_counter += 1;
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_INSERT_RETURN(true) _internal_move_insert(size_t index, T &&item) {
-            this->_internal_shift_right<T>(index, 1);
+        void _internal_move_insert(size_t index, T &&item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
+            this->_internal_shift_right(index, 1);
 
             new(this->buffer + index) T(std::move(item));
             this->item_counter += 1;
@@ -305,24 +276,23 @@ namespace ext {
          * using Vector&lt;T&gt;::_internal_shift_right&lt;T&gt;(size_t) <br>
          * Destructs items if not trivial destructible
          * @warning no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @tparam Args - Unknown amount of arguments and their type
          * @param index - Index of new item
          * @param args - Arguments for the constructor
          * @return Decides which methods get generated
          */
-        template<class X, class... Args>
-        EXT_VECTOR_INTERNAL_EMPLACE_RETURN(false) _internal_emplace(size_t index, Args &&... args) {
-            this->_internal_shift_right<T>(index, 1);
+        template<class... Args>
+        void _internal_emplace(size_t index, Args &&... args) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
+            this->_internal_shift_right(index, 1);
 
             this->buffer[index].~T();
             new(this->buffer + index) T(std::move(args)...);
             this->item_counter += 1;
         };
 
-        template<class X, class... Args>
-        EXT_VECTOR_INTERNAL_EMPLACE_RETURN(true) _internal_emplace(size_t index, Args &&... args) {
-            this->_internal_shift_right<T>(index, 1);
+        template<class... Args>
+        void _internal_emplace(size_t index, Args &&... args) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
+            this->_internal_shift_right(index, 1);
 
             new(this->buffer + index) T(std::move(args)...);
             this->item_counter += 1;
@@ -331,64 +301,58 @@ namespace ext {
         /**
          * Removes the last item from the Vector <br>
          * Destructs the item if not trivial destructible
-         * @tparam X - Datatype of buffer stored in Vector
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_POP_BACK_RETURN(false) _internal_pop_back() {
+        void _internal_pop_back() requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             this->item_counter -= 1;
             this->buffer[this->item_counter].~T();
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_POP_BACK_RETURN(true) _internal_pop_back() {
+        void _internal_pop_back() requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             this->item_counter -= 1;
         };
 
         /**
          * Copies item and replaces index with it <br>
          * Destructs the item if not trivial destructible
-         * @tparam X - Datatype of buffer stored in Vector
          * @param index - Index to replace
          * @param item - Item to replace with
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(false) _internal_copy_replace(size_t index, const T &item) {
+        void _internal_copy_replace(size_t index, const T &item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             this->buffer[index].~T();
             new(this->buffer + index) T(item);
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_COPY_REPLACE_RETURN(true) _internal_copy_replace(size_t index, const T &item) {
+        void _internal_copy_replace(size_t index, const T &item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             new(this->buffer + index) T(item);
         };
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_replace&lt;T&gt;(size_t, const T&) but with moving
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(false) _internal_move_replace(size_t index, T &&item) {
+        void _internal_move_replace(size_t index, T &&item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             this->buffer[index].~T();
             new(this->buffer + index) T(std::move(item));
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_MOVE_REPLACE_RETURN(true) _internal_move_replace(size_t index, T &&item) {
+        void _internal_move_replace(size_t index, T &&item) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             new(this->buffer + index) T(std::move(item));
         };
 
         /**
          * Same as Vector&lt;T&gt;::_internal_copy_replace&lt;T&gt;(size_t, const T&) but with emplacing
          */
-        template<class X, class... Args>
-        EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(false) _internal_emplace_replace(size_t index, Args &&... args) {
+        template<class... Args>
+        void
+        _internal_emplace_replace(size_t index, Args &&... args) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, false) {
             this->buffer[index].~T();
             new(this->buffer + index) T(std::move(args)...);
         };
 
-        template<class X, class... Args>
-        EXT_VECTOR_INTERNAL_EMPLACE_REPLACE_RETURN(true) _internal_emplace_replace(size_t index, Args &&... args) {
+        template<class... Args>
+        void
+        _internal_emplace_replace(size_t index, Args &&... args) requires EXT_VECTOR_TRIVIAL_DESTRUCTIBLE(T, true) {
             new(this->buffer + index) T(std::move(args)...);
         };
 
@@ -396,25 +360,22 @@ namespace ext {
          * Swaps two items positions in the Vector <br>
          * Destructs the items if not trivial destructible
          * @warning destruction can throw and no bounds checking
-         * @tparam X - Datatype of buffer stored in Vector
          * @param a - Index of first item
          * @param b - Index of second item
          * @return Decides which methods get generated
          */
-        template<class X>
-        EXT_VECTOR_INTERNAL_SWAP_ITEMS_RETURN(false) _internal_swap_items_init(size_t a, size_t b) {
+        void _internal_swap_items_init(size_t a, size_t b) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, false) {
             T temp = T(this->buffer[a]);
 
-            this->_internal_copy_replace<T>(a, this->buffer[b]);
-            this->_internal_copy_replace<T>(b, temp);
+            this->_internal_copy_replace(a, this->buffer[b]);
+            this->_internal_copy_replace(b, temp);
         };
 
-        template<class X>
-        EXT_VECTOR_INTERNAL_SWAP_ITEMS_RETURN(true) _internal_swap_items_init(size_t a, size_t b) {
+        void _internal_swap_items_init(size_t a, size_t b) requires EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T, true) {
             T temp = T(std::move(this->buffer[a]));
 
-            this->_internal_move_replace<T>(a, std::move(this->buffer[b]));
-            this->_internal_move_replace<T>(b, std::move(temp));
+            this->_internal_move_replace(a, std::move(this->buffer[b]));
+            this->_internal_move_replace(b, std::move(temp));
         };
 
     public:
@@ -488,7 +449,7 @@ namespace ext {
          */
         ~vector() {
             if (this->buffer != nullptr) {
-                this->_internal_clear_items<T>();
+                this->_internal_clear_items();
                 ::operator delete(this->buffer);
                 this->buffer = nullptr;
             }
@@ -526,7 +487,7 @@ namespace ext {
          * @return Self
          */
         vector<T> &operator=(std::initializer_list<T> list) {
-            this->_internal_clear_items<T>();
+            this->_internal_clear_items();
             this->_internal_resize_on_demand(list.size());
 
             for (auto item: list) {
@@ -645,7 +606,7 @@ namespace ext {
          */
         void shrink_to_fit() {
             vector<T> temp(EXT_VECTOR_SIZE(this->item_counter));
-            this->_internal_simple_copy_vector_to<T>(temp);
+            this->_internal_simple_copy_vector_to(temp);
             temp.swap(*this);
         };
 
@@ -657,7 +618,7 @@ namespace ext {
          * Destructs all items if not trivial destructible
          */
         void clear() {
-            this->_internal_clear_items<T>();
+            this->_internal_clear_items();
         };
 
         /**
@@ -668,7 +629,7 @@ namespace ext {
         void erase(size_t index) {
             EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_shift_left<T>(index);
+            this->_internal_shift_left(index);
         };
 
         /**
@@ -680,7 +641,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
             this->_internal_resize_on_demand(1);
 
-            this->_internal_copy_insert<T>(index, item);
+            this->_internal_copy_insert(index, item);
         };
 
         /**
@@ -692,7 +653,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
             this->_internal_resize_on_demand(1);
 
-            this->_internal_move_insert<T>(index, std::move(item));
+            this->_internal_move_insert(index, std::move(item));
         };
 
         /**
@@ -702,7 +663,7 @@ namespace ext {
          */
         void insert(size_t index, std::initializer_list<T> list) {
             this->_internal_resize_on_demand(list.size());
-            this->_internal_shift_right<T>(index, list.size());
+            this->_internal_shift_right(index, list.size());
 
             size_t i = index;
             for (auto item: list) {
@@ -718,7 +679,7 @@ namespace ext {
          */
         void insert(size_t index, vector<T> &vec) {
             this->_internal_resize_on_demand(vec.size());
-            this->_internal_shift_right<T>(index, vec.size());
+            this->_internal_shift_right(index, vec.size());
 
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_copy_put(index + i, vec[i]);
@@ -732,7 +693,7 @@ namespace ext {
          */
         void insert(size_t index, vector<T> &&vec) {
             this->_internal_resize_on_demand(vec.size());
-            this->_internal_shift_right<T>(index, vec.size());
+            this->_internal_shift_right(index, vec.size());
 
             for (size_t i = 0; i < vec.size(); i += 1) {
                 this->_internal_move_put(index + i, std::move(vec[i]));
@@ -750,7 +711,7 @@ namespace ext {
         void insert(size_t index, Iterator start, Iterator stop) {
             size_t size = std::distance(start, stop);
             this->_internal_resize_on_demand(size);
-            this->_internal_shift_right<T>(index, size);
+            this->_internal_shift_right(index, size);
 
             size_t i = index;
             while (start != stop) {
@@ -837,7 +798,7 @@ namespace ext {
          * Removes the last item of the Vector
          */
         void pop_back() {
-            this->_internal_pop_back<T>();
+            this->_internal_pop_back();
         };
 
         /**
@@ -859,7 +820,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(a)
             EXT_VECTOR_ASSERT_INDEX(b)
 
-            this->_internal_swap_items_init<T>(a, b);
+            this->_internal_swap_items_init(a, b);
         };
 
         /**
@@ -868,7 +829,7 @@ namespace ext {
          */
         void resize(size_t size) {
             for (size_t i = this->item_counter; i > size; i -= 1) {
-                this->_internal_pop_back<T>();
+                this->_internal_pop_back();
             }
         };
 
@@ -883,7 +844,7 @@ namespace ext {
             EXT_VECTOR_ASSERT_INDEX(index)
             this->_internal_resize_on_demand(1);
 
-            this->_internal_emplace<T>(index, std::move(args)...);
+            this->_internal_emplace(index, std::move(args)...);
         };
 
         /**
@@ -906,7 +867,7 @@ namespace ext {
         void replace(size_t index, const T &item) {
             EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_copy_replace<T>(index, item);
+            this->_internal_copy_replace(index, item);
         };
 
         /**
@@ -917,7 +878,7 @@ namespace ext {
         void replace(size_t index, T &&item) {
             EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_move_replace<T>(index, std::move(item));
+            this->_internal_move_replace(index, std::move(item));
         };
 
         /**
@@ -930,7 +891,7 @@ namespace ext {
         void replace(size_t index, Args &&... args) {
             EXT_VECTOR_ASSERT_INDEX(index)
 
-            this->_internal_emplace_replace<T>(index, std::move(args)...);
+            this->_internal_emplace_replace(index, std::move(args)...);
         };
 
         // ************************
