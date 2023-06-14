@@ -1,6 +1,8 @@
 #ifndef CPP_STD_LIB_TESTOBJ_HPP
 #define CPP_STD_LIB_TESTOBJ_HPP
 
+#define MANUAL_DEBUG
+
 #ifdef MANUAL_DEBUG
 #include <iostream>
 #endif
@@ -60,6 +62,12 @@ public:
 
 		return *this;
 	}
+
+    ~testObj() {
+#ifdef MANUAL_DEBUG
+        std::cout << "[" << this->val << "] called ~testObj" << std::endl;
+#endif
+    }
 };
 
 #endif //CPP_STD_LIB_TESTOBJ_HPP
