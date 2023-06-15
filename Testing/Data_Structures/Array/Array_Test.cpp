@@ -6,7 +6,7 @@
 #include "Array/Array.hpp"
 #include <TestObj.hpp>
 
-BOOST_AUTO_TEST_CASE(DEFAULT_CONSTRUCTOR) {
+BOOST_AUTO_TEST_CASE(Array_Default_Constructor) {
     ext::array<int, 5, 4> arr1;
     ext::array<std::string, 5, 5, 4, 3> arr2;
     ext::array<testObj, 5, 5, 4, 3, 2, 1> arr3;
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(DEFAULT_CONSTRUCTOR) {
     }
 
     auto test_0_dim_size = []() {
-            return ext::array<int, 5, 0>();
+        return ext::array<int, 5, 0>();
     };
     BOOST_CHECK_THROW(test_0_dim_size(), std::runtime_error);
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(DEFAULT_CONSTRUCTOR) {
     BOOST_CHECK_THROW(test_0_dims(), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(RUNTIME_CONSTRUCTOR) {
+BOOST_AUTO_TEST_CASE(Array_Runtime_Constructor) {
     ext::array<int> arr1(5, 4);
     ext::array<std::string> arr2(5, 5, 4, 3);
     ext::array<testObj> arr3(5, 5, 4, 3, 2, 1);
@@ -78,4 +78,60 @@ BOOST_AUTO_TEST_CASE(RUNTIME_CONSTRUCTOR) {
         return ext::array<int>(0, 5);
     };
     BOOST_CHECK_THROW(test_0_dims(), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(Array_Indexing) {
+    ext::array<int, 3, 4> arr1;
+    ext::array<std::string, 4, 5> arr2;
+    ext::array<testObj, 5, 6> arr3;
+
+    arr1[1, 2, 3] = 7;
+    arr2[1, 2, 3, 4] = "7";
+    arr3[1, 2, 3, 4, 5] = testObj(7);
+
+    auto arr1_test1 = [&arr1]() {
+        return arr1[1, 2, 3] == *(arr1.data() + 1 * 4 * 4 + 2 * 4 + 3);
+    };
+    BOOST_TEST(arr1_test1() == true);
+
+    auto arr2_test1 = [&arr2]() {
+        return arr2[1, 2, 3, 4] == *(arr2.data() + 1 * 5 * 5 * 5 + 2 * 5 * 5 + 3 * 5 + 4);
+    };
+    BOOST_TEST(arr2_test1() == true);
+
+    auto arr3_test1 = [&arr3]() {
+        return arr3[1, 2, 3, 4, 5].val ==
+               (arr3.data() + 1 * 6 * 6 * 6 * 6 + 2 * 6 * 6 * 6 + 3 * 6 * 6 + 4 * 6 + 5)->val;
+    };
+    BOOST_TEST(arr3_test1() == true);
+
+    auto arr1_test2 = [&arr1]() {
+        return arr1[1, 2, 3] == arr1.at(1, 2, 3);
+    };
+    BOOST_TEST(arr1_test2() == true);
+
+    auto arr2_test2 = [&arr2]() {
+        return arr2[1, 2, 3, 4] == arr2.at(1, 2, 3, 4);
+    };
+    BOOST_TEST(arr2_test2() == true);
+
+    auto arr3_test2 = [&arr3]() {
+        return arr3[1, 2, 3, 4, 5].val == arr3.at(1, 2, 3, 4, 5).val;
+    };
+    BOOST_TEST(arr3_test2() == true);
+
+    auto arr1_throw_test = [&arr1]() {
+        return arr1.at(0, 0, 5);
+    };
+    BOOST_CHECK_THROW(arr1_throw_test(), std::runtime_error);
+
+    auto arr2_throw_test = [&arr2]() {
+        return arr2.at(1, 0, 6, 3);
+    };
+    BOOST_CHECK_THROW(arr2_throw_test(), std::runtime_error);
+
+    auto arr3_throw_test = [&arr3]() {
+        return arr3.at(7, 1, 1, 1, 1);
+    };
+    BOOST_CHECK_THROW(arr3_throw_test(), std::runtime_error);
 }

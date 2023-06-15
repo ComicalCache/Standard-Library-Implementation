@@ -4,25 +4,26 @@
 #include <utility>
 #include <stdexcept>
 
-#define EXT_ARRAY_ASSERT_INDEX(i)  if (i >= this->_dsize) { throw std::runtime_error("val out of range"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(n) if (n > this->_d) { throw std::runtime_error("too many dimension sizes"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT(n) if (n < 1) { throw std::runtime_error("too few dimensions"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_SIZE(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
 
 #define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, b) (std::is_trivially_destructible<T>::value == b)
+#define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T, b) (std::is_default_constructible<T>::value == b)
 
 #define EXT_ARRAY_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
 #define EXT_ARRAY_DIMENSION_SIZE_INIT(N) (size_t *) ::operator new(N * sizeof(size_t))
 
 namespace ext {
     /**
-     * A D dimensional static sized array where each dimension is of length N storing T's. <br>
-     * N and D have a default value of 1 for ease of usage in some cases.
+     * A D dimensional static sized array where each dimension's size can be individually defined. <br>
+     * D has a default value of 1 for ease of usage in some cases. <br>
+     * Example: ext::array<int, 4, 3, 2> is a 4 dimensional array with respective dimension sizes 3, 2, 2, 2.
      * @tparam T - Type to store
      * @tparam D - Number of dimensions
      * @tparam N - Size of each dimension
      */
-    template<class T, size_t D = 1, size_t... N>
+    template<class T, size_t D = 1, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T, true)
     class array {
     private:
         /**
@@ -50,6 +51,11 @@ namespace ext {
 
             size_t count = 1;
             for (const auto i: {indices...}) {
+
+                if (i >= this->_n[count]) {
+                    throw std::runtime_error("invalid index for dimension");
+                }
+
                 if (!init_iter) {
                     index *= this->_n[count];
                     index += i;
@@ -64,6 +70,54 @@ namespace ext {
             return index;
         };
 
+        /**
+         * Clears all items in the array <br>
+         * If T is not trivially destructible it calls the destructor
+         * @warning this operation is expensive
+         */
+        void _internal_destruct_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
+            for (size_t i = 0; i < this->_size; i += 1) {
+                this->buffer[i].~T();
+            }
+        };
+
+        void _internal_destruct_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
+        };
+
+        /**
+         * Initialises each item in the array with the default constructor.
+         * @warning this operation is expensive
+         */
+        void _internal_init_items() {
+            for (size_t i = 0; i < this->_size; i += 1) {
+                this->buffer[i] = T();
+            }
+        };
+
+        /**
+         * Clears all items in the array and constructs a new instance <br>
+         * If T is not trivially destructible it calls the destructor
+         * @warning this operation is expensive
+         */
+        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
+            for (size_t i = 0; i < this->_size; i += 1) {
+                this->buffer[i].~T();
+                this->buffer[i] = T();
+            }
+        };
+
+        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
+            for (size_t i = 0; i < this->_size; i += 1) {
+                this->buffer[i] = T();
+            }
+        };
+
+        /**
+         * Initialises the array according to dimension and their respective sizes
+         * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
+         * @param d - Dimension count
+         * @param ns - Dimension sizes
+         */
         template<typename... Ns>
         void _internal_constructor_work(size_t d, Ns... ns) {
             EXT_ARRAY_ASSERT_DIMENSION_COUNT(d);
@@ -94,29 +148,38 @@ namespace ext {
                 this->_size *= this->_n[i];
             }
             this->buffer = EXT_ARRAY_BUFFER_INIT(this->_size);
-        };
-
-        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
-            // TODO
-        };
-
-        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
-            // TODO
+            this->_internal_init_items();
         };
 
     public:
+        /**
+         * Creates a new D dimensional array with the dimension sizes N <br>
+         * If less N's are provided than the size of D the last D - count(N...) dimensions
+         * have the same size last defined.
+         */
         array() {
             this->_internal_constructor_work(D, N...);
         };
 
+        /**
+         * Creates a new D dimensional array with the dimension sizes N <br>
+         * If less N's are provided than the size of D the last D - count(N...) dimensions
+         * have the same size last defined. <br>
+         * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
+         * @param d - Dimension count
+         * @param ns - Dimension sizes
+         */
         template<typename... Ns>
         array<T, 0, 0>(size_t d, Ns... ns) {
             this->_internal_constructor_work(d, ns...);
         };
 
+        /**
+         * Destructor calls, if necessary, the constructor of each element in the buffer before freeing the buffer
+         */
         ~array() {
             if (this->buffer != nullptr) {
-                this->_internal_clear_items();
+                this->_internal_destruct_items();
                 ::operator delete(this->buffer);
                 this->buffer = nullptr;
             }
@@ -125,33 +188,56 @@ namespace ext {
         // ***************
         // * Item Access *
         // ***************
+        /**
+         * Returns item reference at index
+         * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
+         * @param indices - indices
+         * @return Item reference
+         */
         template<typename... Args>
         T &operator[](Args... indices) {
             return this->buffer[this->_internal_calculate_index(indices...)];
         };
 
+        /**
+         * Returns const item reference at index
+         * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
+         * @param indices - indices
+         * @return Item reference
+         */
         template<typename... Args>
         const T &operator[](Args... indices) const {
             return this->buffer[this->_internal_calculate_index(indices...)];
 
         };
 
+        /**
+         * Returns item reference at index
+         * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
+         * @param indices - indices
+         * @return Item reference
+         */
         template<typename... Args>
         T &at(Args... indices) {
             size_t index = this->_internal_calculate_index(indices...);
-            EXT_ARRAY_ASSERT_INDEX(index)
 
             return this->buffer[index];
         };
 
+        /**
+         * Returns const item reference at index
+         * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
+         * @param indices - indices
+         * @return Item reference
+         */
         template<typename... Args>
         const T &at(Args... indices) const {
             size_t index = this->_internal_calculate_index(indices...);
-            EXT_ARRAY_ASSERT_INDEX(index)
 
             return this->buffer[index];
-
         };
+
+        T *data() noexcept { return this->buffer; };
 
         // ************
         // * Capacity *
@@ -170,6 +256,17 @@ namespace ext {
 
         size_t size() {
             return this->_size;
+        };
+
+        // *************
+        // * Modifiers *
+        // *************
+        /**
+         * Clears the array <br>
+         * Destructs all items if not trivial destructible
+         */
+        void clear() {
+            this->_internal_clear_items();
         };
     };
 }
