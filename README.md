@@ -1,6 +1,6 @@
 # Standard Library Implementations
 This repository contains a custom standard library implementation which I made to learn and practice or/and out of curiosity and fun. <br>
-Documentation for the functions/methods is provided via doxygen descriptions from inside the IDE/text editor.
+Documentation for the functions/methods is provided via doxygen descriptions from inside the IDE/text editor or when build from the project root.
 
 #### Project Information
 - Project namespace: ext
@@ -13,12 +13,13 @@ ext::vector<T> vec;
 ```
 
 ## Array
-##### TODO: Investigate weird memory leaks
-##### TODO: Add construction/assignment with iterable type
-##### TODO: Add insertion with iterators (maybe not)
-Header only implementation of an array.
+##### TODO: Add constructor from other array
+##### TODO: Add all assignment cases
+##### TODO: Add slice insert
+##### TODO: Add slice get (possible?, typesafe?)
+Header only implementation of an n-dimensional array.
 ```cpp
-ext::array<T, N> arr;
+ext::array<T, D, N...> arr;
 ```
 
 ## Heap
@@ -26,12 +27,6 @@ ext::array<T, N> arr;
 Header only implementation of a dynamic sized heap (sometimes priority queue).
 ```cpp
 ext::heap<T> heap;
-```
-
-## Linked list
-Header only implementation of a linked list.
-```cpp
-ext::linked_list<T> list;
 ```
 
 ## Thanks, Credits and Sources
