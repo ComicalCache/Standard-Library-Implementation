@@ -12,14 +12,26 @@ Header only implementation of a vector.
 ext::vector<T> vec;
 ```
 
-## Array
-##### TODO: Add constructor from other array
+## Dynamic Array
+##### TODO: change docs
+##### TODO: Add move constructor from other dynamic_array
+##### TODO: Add constructor with init value
+##### TODO: Add constructor with values from initializer list
+##### TODO: Add constructor from iterable/list/dynamic_array with values from iterable
+##### TODO: Add constructor from iterable/list/dynamic_array with dimension and sizes
 ##### TODO: Add all assignment cases
 ##### TODO: Add slice insert
 ##### TODO: Add slice get (possible?, typesafe?)
-Header only implementation of an n-dimensional array.
+Header only implementation of an n-dimensional dynamic array.
 ```cpp
-ext::array<T, D, N...> arr;
+ext::dynamic_array<T> arr;
+```
+
+## Static array
+##### TODO: everything
+Header only implementation of an n-dimensional static array.
+```cpp
+ext::static_array<T, D, N...> arr;
 ```
 
 ## Heap

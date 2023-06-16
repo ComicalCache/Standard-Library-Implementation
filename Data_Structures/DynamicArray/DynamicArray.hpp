@@ -23,14 +23,13 @@ concept is_integral = std::is_integral_v<U>;
 namespace ext {
     /**
      * A D dimensional static sized array where each dimension's size can be individually defined. <br>
-     * D has a default value of 1 for ease of usage in some cases. <br>
      * Example: ext::array<int, 4, 3, 2> is a 4 dimensional array with respective dimension sizes 3, 2, 2, 2.
      * @tparam T - Type to store
      * @tparam D - Number of dimensions
      * @tparam N - Size of each dimension
      */
-    template<class T, size_t D = 1, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
-    class array {
+    template<class T, size_t D = 0, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
+    class dynamic_array {
     private:
         /**
          * Length of dimensions
@@ -180,7 +179,7 @@ namespace ext {
          * @param arr
          */
         template<size_t X, size_t... Y>
-        void _internal_copy_assign(ext::array<T, X, Y...> &arr) {
+        void _internal_copy_assign(ext::dynamic_array<T, X, Y...> &arr) {
             // clean up if necessary
             if (this->buffer != nullptr) {
                 this->_internal_clear_items();
@@ -206,7 +205,7 @@ namespace ext {
          * If less N's are provided than the size of D the last D - count(N...) dimensions
          * have the same size last defined.
          */
-        array<T>() {
+        dynamic_array<T>() requires (D != 0) {
             this->_internal_constructor_work(D, N...);
         };
 
@@ -219,7 +218,7 @@ namespace ext {
          * @param ns - Dimension sizes
          */
         template<is_integral... Ns>
-        array<T>(size_t d, Ns... ns) {
+        dynamic_array<T>(size_t d, Ns... ns) requires (D == 0 && (sizeof... (N) == 0)) {
             this->_internal_constructor_work(d, ns...);
         };
 
@@ -230,14 +229,14 @@ namespace ext {
          * @param arr - The array to copy
          */
         template<size_t X, size_t... Y>
-        array<T>(ext::array<T, X, Y...> &arr) {
+        dynamic_array<T>(ext::dynamic_array<T, X, Y...> &arr) requires ((D == 0 || D == X) && (sizeof... (N) == 0)) {
             this->_internal_copy_assign(arr);
         };
 
         /**
          * Destructor calls, if necessary, the constructor of each element in the buffer before freeing the buffer
          */
-        ~array() {
+        ~dynamic_array() {
             if (this->buffer != nullptr) {
                 this->_internal_destruct_items();
                 EXT_ARRAY_BUFFER_DELETE;

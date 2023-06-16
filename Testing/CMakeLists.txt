@@ -21,7 +21,8 @@ if ((EXISTS "${Boost_INCLUDE_DIRS}" AND IS_DIRECTORY "${Boost_INCLUDE_DIRS}")
     include_directories(${CMAKE_SOURCE_DIR}/Data_Structures/)
 
     # Test Cases
-    add_subdirectory(Data_Structures/Array)
+    add_subdirectory(Data_Structures/DynamicArray)
+    add_subdirectory(Data_Structures/StaticArray)
     add_subdirectory(Data_Structures/Vector)
     add_subdirectory(Data_Structures/Heap)
 else ()
