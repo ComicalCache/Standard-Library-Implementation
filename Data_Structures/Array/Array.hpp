@@ -13,7 +13,9 @@
 #define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T) std::is_default_constructible<T>::value
 
 #define EXT_ARRAY_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
+#define EXT_ARRAY_BUFFER_DELETE ::operator delete(this->buffer)
 #define EXT_ARRAY_DIMENSION_SIZE_INIT(N) (size_t *) ::operator new(N * sizeof(size_t))
+#define EXT_ARRAY_DIMENSION_SIZE_DELETE ::operator delete(this->_n)
 
 template<typename U>
 concept is_integral = std::is_integral_v<U>;
@@ -33,13 +35,13 @@ namespace ext {
         /**
          * Length of dimensions
          */
-        size_t *_n;
+        size_t *_n = nullptr;
         /**
          * Number of dimensions
          */
         size_t _d;
         size_t _size;
-        T *buffer;
+        T *buffer = nullptr;
 
     private:
         /**
@@ -171,13 +173,40 @@ namespace ext {
             this->_internal_init_items();
         };
 
+        /**
+         * Copies an Array into the current Array
+         * @tparam X - Ignored
+         * @tparam Y - Ignored
+         * @param arr
+         */
+        template<size_t X, size_t... Y>
+        void _internal_copy_assign(ext::array<T, X, Y...> &arr) {
+            // clean up if necessary
+            if (this->buffer != nullptr) {
+                this->_internal_clear_items();
+                EXT_ARRAY_BUFFER_DELETE;
+                // it can be assumed that buffer and _n are always either nullptr or not at the same time
+                EXT_ARRAY_DIMENSION_SIZE_DELETE;
+            }
+
+            this->_d = arr.dimensions();
+            this->_size = arr.size();
+            this->_n = EXT_ARRAY_DIMENSION_SIZE_INIT(this->_d);
+            this->buffer = EXT_ARRAY_BUFFER_INIT(this->_size);
+
+            (void) std::memcpy(this->_n, arr.dimension_sizes(), this->_d * sizeof(size_t));
+            (void) std::memcpy(this->buffer, arr.data(), this->_size * sizeof(T));
+            // (void) std::copy(arr->_n, arr->_n + arr->_d, this->_n);
+            // (void) std::copy(arr->buffer, arr->buffer + arr->_size, this->buffer);
+        };
+
     public:
         /**
          * Creates a new D dimensional array with the dimension sizes N <br>
          * If less N's are provided than the size of D the last D - count(N...) dimensions
          * have the same size last defined.
          */
-        array() {
+        array<T>() {
             this->_internal_constructor_work(D, N...);
         };
 
@@ -190,8 +219,19 @@ namespace ext {
          * @param ns - Dimension sizes
          */
         template<is_integral... Ns>
-        array<T, 0, 0>(size_t d, Ns... ns) {
+        array<T>(size_t d, Ns... ns) {
             this->_internal_constructor_work(d, ns...);
+        };
+
+        /**
+         * Copy constructs an array from a given array
+         * @tparam X - Ignored
+         * @tparam Y - Ignored
+         * @param arr - The array to copy
+         */
+        template<size_t X, size_t... Y>
+        array<T>(ext::array<T, X, Y...> &arr) {
+            this->_internal_copy_assign(arr);
         };
 
         /**
@@ -200,8 +240,10 @@ namespace ext {
         ~array() {
             if (this->buffer != nullptr) {
                 this->_internal_destruct_items();
-                ::operator delete(this->buffer);
+                EXT_ARRAY_BUFFER_DELETE;
+                EXT_ARRAY_DIMENSION_SIZE_DELETE;
                 this->buffer = nullptr;
+                this->_n = nullptr;
             }
         };
 
@@ -264,6 +306,8 @@ namespace ext {
         };
 
         T *data() noexcept { return this->buffer; };
+
+        size_t *dimension_sizes() noexcept { return this->_n; };
 
         // ************
         // * Capacity *

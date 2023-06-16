@@ -80,6 +80,30 @@ BOOST_AUTO_TEST_CASE(Array_Runtime_Constructor) {
     BOOST_CHECK_THROW(test_0_dims(), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(Array_Copy_Constructor) {
+    ext::array<int, 4, 4> arr1;
+    ext::array<std::string, 5, 5> arr2;
+
+    arr1[0, 1, 2, 3] = 5;
+    arr1[3, 2, 1, 0] = 1;
+    arr2[0, 1, 2, 3, 4] = "5";
+    arr2[4, 3, 2, 1, 0] = "1";
+
+    ext::array<int> arr1_copy(arr1);
+    ext::array<std::string> arr2_copy(arr2);
+
+    arr1_copy[1, 0, 0, 0] = 7;
+    arr2_copy[1, 0, 0, 0] = "7";
+
+    BOOST_TEST(arr1_copy.at(0, 1, 2, 3) == 5);
+    BOOST_TEST(arr1_copy.at(3, 2, 1, 0) == 1);
+    BOOST_TEST(arr1_copy.at(0, 1, 2, 3) == 5);
+    BOOST_TEST(arr1_copy.at(3, 2, 1, 0) == 1);
+
+    BOOST_TEST(arr1.at(1, 0, 0, 0) != 7);
+    BOOST_TEST(arr2.at(1, 0, 0, 0) != "7");
+}
+
 BOOST_AUTO_TEST_CASE(Array_Indexing) {
     ext::array<int, 3, 4> arr1;
     ext::array<std::string, 4, 5> arr2;
@@ -93,82 +117,36 @@ BOOST_AUTO_TEST_CASE(Array_Indexing) {
     arr2[1, 2] = "8";
     arr3[1, 2] = testObj(8);
 
-    auto arr1_test1 = [&arr1]() {
-        return 7 == *(arr1.data() + 1 * 4 * 4 + 2 * 4 + 3);
-    };
-    BOOST_TEST(arr1_test1() == true);
+    bool arr1_test1 = 7 == *(arr1.data() + 1 * 4 * 4 + 2 * 4 + 3);
+    BOOST_TEST(arr1_test1);
 
-    auto arr2_test1 = [&arr2]() {
-        return "7" == *(arr2.data() + 1 * 5 * 5 * 5 + 2 * 5 * 5 + 3 * 5 + 4);
-    };
-    BOOST_TEST(arr2_test1() == true);
+    bool arr2_test1 = "7" == *(arr2.data() + 1 * 5 * 5 * 5 + 2 * 5 * 5 + 3 * 5 + 4);
+    BOOST_TEST(arr2_test1);
 
-    auto arr3_test1 = [&arr3]() {
-        return testObj(7).val ==
-               (arr3.data() + 1 * 6 * 6 * 6 * 6 + 2 * 6 * 6 * 6 + 3 * 6 * 6 + 4 * 6 + 5)->val;
-    };
-    BOOST_TEST(arr3_test1() == true);
+    bool arr3_test1 = testObj(7).val ==
+                      (arr3.data() + 1 * 6 * 6 * 6 * 6 + 2 * 6 * 6 * 6 + 3 * 6 * 6 + 4 * 6 + 5)->val;
+    BOOST_TEST(arr3_test1);
 
-    auto arr1_test2 = [&arr1]() {
-        return 7 == arr1.at(1, 2, 3);
-    };
-    BOOST_TEST(arr1_test2() == true);
+    BOOST_TEST(7 == arr1.at(1, 2, 3));
+    BOOST_TEST("7" == arr2.at(1, 2, 3, 4));
+    BOOST_TEST(testObj(7).val == arr3.at(1, 2, 3, 4, 5).val);
 
-    auto arr2_test2 = [&arr2]() {
-        return "7" == arr2.at(1, 2, 3, 4);
-    };
-    BOOST_TEST(arr2_test2() == true);
+    bool arr1_test3 = 8 == *(arr1.data() + 1 * 4 * 4 + 2 * 4);
+    BOOST_TEST(arr1_test3);
 
-    auto arr3_test2 = [&arr3]() {
-        return testObj(7).val == arr3.at(1, 2, 3, 4, 5).val;
-    };
-    BOOST_TEST(arr3_test2() == true);
+    bool arr2_test3 = "8" == *(arr2.data() + 1 * 5 * 5 * 5 + 2 * 5 * 5);
+    BOOST_TEST(arr2_test3);
 
-    auto arr1_test3 = [&arr1]() {
-        return 8 == *(arr1.data() + 1 * 4 * 4 + 2 * 4);
-    };
-    BOOST_TEST(arr1_test3() == true);
-
-    auto arr2_test3 = [&arr2]() {
-        return "8" == *(arr2.data() + 1 * 5 * 5 * 5 + 2 * 5 * 5);
-    };
-    BOOST_TEST(arr2_test3() == true);
-
-    auto arr3_test3 = [&arr3]() {
-        return testObj(8).val == (arr3.data() + 1 * 6 * 6 * 6 * 6 + 2 * 6 * 6 * 6)->val;
-    };
-    BOOST_TEST(arr3_test3() == true);
-
-    auto arr1_test4 = [&arr1]() {
-        return 8 == arr1.at(1, 2);
-    };
-    BOOST_TEST(arr1_test4() == true);
-
-    auto arr2_test4 = [&arr2]() {
-        return "8" == arr2.at(1, 2);
-    };
-    BOOST_TEST(arr2_test4() == true);
-
-    auto arr3_test4 = [&arr3]() {
-        return testObj(8).val == arr3.at(1, 2).val;
-    };
-    BOOST_TEST(arr3_test4() == true);
+    bool arr3_test3 = testObj(8).val == (arr3.data() + 1 * 6 * 6 * 6 * 6 + 2 * 6 * 6 * 6)->val;
+    BOOST_TEST(arr3_test3);
+    BOOST_TEST(8 == arr1.at(1, 2));
+    BOOST_TEST("8" == arr2.at(1, 2));
+    BOOST_TEST(testObj(8).val == arr3.at(1, 2).val);
 
 
-    auto arr1_throw_test = [&arr1]() {
-        return arr1.at(0, 0, 5);
-    };
-    BOOST_CHECK_THROW(arr1_throw_test(), std::runtime_error);
-
-    auto arr2_throw_test = [&arr2]() {
-        return arr2.at(1, 0, 6, 3);
-    };
-    BOOST_CHECK_THROW(arr2_throw_test(), std::runtime_error);
-
-    auto arr3_throw_test = [&arr3]() {
-        return arr3.at(7, 1, 1, 1, 1);
-    };
-    BOOST_CHECK_THROW(arr3_throw_test(), std::runtime_error);
+    BOOST_CHECK_THROW(arr1.at(0, 0, 5), std::runtime_error);
+    BOOST_CHECK_THROW(arr2.at(1, 0, 6, 3), std::runtime_error);
+    BOOST_CHECK_THROW(arr3.at(7, 1, 1, 1, 1), std::runtime_error);
 
 
     BOOST_CHECK_THROW(arr1.at(1, 2, 3, 4), std::runtime_error);
@@ -194,20 +172,9 @@ BOOST_AUTO_TEST_CASE(Array_Clear) {
     arr2.clear();
     arr3.clear();
 
-    auto arr1_test1 = [&arr1]() {
-        return arr1[1, 2, 3] == int();
-    };
-    BOOST_TEST(arr1_test1() == true);
-
-    auto arr2_test1 = [&arr2]() {
-        return arr2[1, 2, 3, 4].empty();
-    };
-    BOOST_TEST(arr2_test1() == true);
-
-    auto arr3_test1 = [&arr3]() {
-        return arr3[1, 2, 3, 4, 5].val == testObj().val;
-    };
-    BOOST_TEST(arr3_test1() == true);
+    BOOST_TEST(arr1.at(1, 2, 3) == int());
+    BOOST_TEST(arr2.at(1, 2, 3, 4).empty());
+    BOOST_TEST(arr3.at(1, 2, 3, 4, 5).val == testObj().val);
 }
 
 BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
@@ -224,25 +191,17 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
         }
     }
 
-    auto arr1_test = [&arr1](size_t i, size_t j, size_t l, size_t t) {
-        return arr1[i, j, l, t];
-    };
-    auto arr2_test = [&arr2](size_t i, size_t j, size_t l, size_t t) {
-        return arr2[i, j, l, t];
-    };
-
     arr1.clear(2, 2, 2, 2);
-    int arr1_test_val = arr1[2, 2, 2, 2];
-    BOOST_TEST(arr1_test_val == int());
+    BOOST_TEST(arr1.at(2, 2, 2, 2) == int());
 
     arr1.clear(2, 2, 2);
     for (size_t i = 0; i < 5; i += 1) {
-        BOOST_TEST(arr1_test(2ul, 2ul, 2ul, i) == int());
+        BOOST_TEST(arr1.at(2ul, 2ul, 2ul, i) == int());
     }
     arr1.clear(2, 2);
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
-            BOOST_TEST(arr1_test(2ul, 2ul, i, j) == int());
+            BOOST_TEST(arr1.at(2ul, 2ul, i, j) == int());
         }
     }
 
@@ -250,7 +209,7 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
             for (size_t l = 0; l < 5; l += 1) {
-                BOOST_TEST(arr1_test(2ul, i, j, l) == int());
+                BOOST_TEST(arr1.at(2ul, i, j, l) == int());
             }
         }
     }
@@ -261,12 +220,12 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
 
     arr2.clear(2, 2, 2);
     for (size_t i = 0; i < 5; i += 1) {
-        BOOST_TEST(arr2_test(2ul, 2ul, 2ul, i).empty());
+        BOOST_TEST(arr2.at(2ul, 2ul, 2ul, i).empty());
     }
     arr2.clear(2, 2);
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
-            BOOST_TEST(arr2_test(2ul, 2ul, i, j).empty());
+            BOOST_TEST(arr2.at(2ul, 2ul, i, j).empty());
         }
     }
 
@@ -274,7 +233,7 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
             for (size_t l = 0; l < 5; l += 1) {
-                BOOST_TEST(arr2_test(2ul, i, j, l).empty());
+                BOOST_TEST(arr2.at(2ul, i, j, l).empty());
             }
         }
     }
