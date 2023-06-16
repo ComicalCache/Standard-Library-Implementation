@@ -7,12 +7,16 @@
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(n) if (n > this->_d) { throw std::runtime_error("too many dimension sizes"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT(n) if (n < 1) { throw std::runtime_error("too few dimensions"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_SIZE(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
+#define EXT_ARRAY_ASSERT_INDEX_COUNT(i) if (sizeof... (i) > this->_d) { throw std::runtime_error("too many indices"); }
 
-#define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, b) (std::is_trivially_destructible<T>::value == b)
-#define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T, b) (std::is_default_constructible<T>::value == b)
+#define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
+#define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T) std::is_default_constructible<T>::value
 
 #define EXT_ARRAY_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
 #define EXT_ARRAY_DIMENSION_SIZE_INIT(N) (size_t *) ::operator new(N * sizeof(size_t))
+
+template<typename U>
+concept is_integral = std::is_integral_v<U>;
 
 namespace ext {
     /**
@@ -23,7 +27,7 @@ namespace ext {
      * @tparam D - Number of dimensions
      * @tparam N - Size of each dimension
      */
-    template<class T, size_t D = 1, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T, true)
+    template<class T, size_t D = 1, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
     class array {
     private:
         /**
@@ -51,7 +55,6 @@ namespace ext {
 
             size_t count = 1;
             for (const auto i: {indices...}) {
-
                 if (i >= this->_n[count]) {
                     throw std::runtime_error("invalid index for dimension");
                 }
@@ -61,10 +64,16 @@ namespace ext {
                     index += i;
                     count += 1;
                 } else {
-                    index = i;
+                    index += i;
                     init_iter = false;
                     continue;
                 }
+            }
+
+            // if less indices are provided than the dimension assume 0s for the remaining ones
+            // missing multiplies from Horner scheme iteration
+            for (; count < this->_d; count += 1) {
+                index *= this->_n[count];
             }
 
             return index;
@@ -75,13 +84,12 @@ namespace ext {
          * If T is not trivially destructible it calls the destructor
          * @warning this operation is expensive
          */
-        void _internal_destruct_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
-            for (size_t i = 0; i < this->_size; i += 1) {
-                this->buffer[i].~T();
+        void _internal_destruct_items() {
+            if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
+                for (size_t i = 0; i < this->_size; i += 1) {
+                    this->buffer[i].~T();
+                }
             }
-        };
-
-        void _internal_destruct_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
         };
 
         /**
@@ -99,15 +107,27 @@ namespace ext {
          * If T is not trivially destructible it calls the destructor
          * @warning this operation is expensive
          */
-        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, false) {
+        void _internal_clear_items() {
             for (size_t i = 0; i < this->_size; i += 1) {
-                this->buffer[i].~T();
+                if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
+                    this->buffer[i].~T();
+                }
                 this->buffer[i] = T();
             }
         };
 
-        void _internal_clear_items() requires EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T, true) {
-            for (size_t i = 0; i < this->_size; i += 1) {
+        template<typename... Args>
+        void _internal_clear_items(Args... indices) {
+            size_t index = this->_internal_calculate_index(indices...);
+            size_t offset = 1;
+            for (size_t i = sizeof... (indices); i < this->_d; i += 1) {
+                offset *= this->_n[i];
+            }
+
+            for (size_t i = index; i < index + offset; i += 1) {
+                if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
+                    this->buffer[i].~T();
+                }
                 this->buffer[i] = T();
             }
         };
@@ -118,7 +138,7 @@ namespace ext {
          * @param d - Dimension count
          * @param ns - Dimension sizes
          */
-        template<typename... Ns>
+        template<is_integral... Ns>
         void _internal_constructor_work(size_t d, Ns... ns) {
             EXT_ARRAY_ASSERT_DIMENSION_COUNT(d);
 
@@ -169,7 +189,7 @@ namespace ext {
          * @param d - Dimension count
          * @param ns - Dimension sizes
          */
-        template<typename... Ns>
+        template<is_integral... Ns>
         array<T, 0, 0>(size_t d, Ns... ns) {
             this->_internal_constructor_work(d, ns...);
         };
@@ -190,6 +210,7 @@ namespace ext {
         // ***************
         /**
          * Returns item reference at index
+         * @warning doesn't check count of indices doesn't exceed the dimension
          * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
          * @param indices - indices
          * @return Item reference
@@ -201,6 +222,7 @@ namespace ext {
 
         /**
          * Returns const item reference at index
+         * @warning doesn't check count of indices doesn't exceed the dimension
          * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
          * @param indices - indices
          * @return Item reference
@@ -219,6 +241,8 @@ namespace ext {
          */
         template<typename... Args>
         T &at(Args... indices) {
+            EXT_ARRAY_ASSERT_INDEX_COUNT(indices)
+
             size_t index = this->_internal_calculate_index(indices...);
 
             return this->buffer[index];
@@ -232,6 +256,8 @@ namespace ext {
          */
         template<typename... Args>
         const T &at(Args... indices) const {
+            EXT_ARRAY_ASSERT_INDEX_COUNT(indices)
+
             size_t index = this->_internal_calculate_index(indices...);
 
             return this->buffer[index];
@@ -242,10 +268,17 @@ namespace ext {
         // ************
         // * Capacity *
         // ************
+        /**
+         * @return the dimension count
+         */
         size_t dimensions() {
             return this->_d;
         };
 
+        /**
+         * @param dim - The dimension
+         * @return the size of that dimension (starting at 1)
+         */
         size_t length_of_dimension(size_t dim) {
             if (dim > this->_d || dim < 1) {
                 throw std::runtime_error("invalid index");
@@ -254,6 +287,9 @@ namespace ext {
             return this->_n[dim - 1];
         };
 
+        /**
+         * @return the size of all dimensions (total size of the array)
+         */
         size_t size() {
             return this->_size;
         };
@@ -267,6 +303,16 @@ namespace ext {
          */
         void clear() {
             this->_internal_clear_items();
+        };
+
+        /**
+         * Clears the array at indices, if not all indices are provided all subsequent dimensions are cleared
+         * @tparam Args - Indices type (this is always size_t and a work around for operator[] not allowing variadic arguments)
+         * @param indices - The indices to clear
+         */
+        template<typename... Args>
+        void clear(Args... indices) {
+            this->_internal_clear_items(indices...);
         };
     };
 }
