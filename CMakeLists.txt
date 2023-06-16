@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 # Implementations
 add_subdirectory(Data_Structures/Array)
 add_subdirectory(Data_Structures/Heap)
-add_subdirectory(Data_Structures/Linked_List)
 add_subdirectory(Data_Structures/Vector)
 
 # Testing
