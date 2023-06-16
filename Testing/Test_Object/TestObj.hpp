@@ -1,12 +1,13 @@
 #ifndef CPP_STD_LIB_TESTOBJ_HPP
 #define CPP_STD_LIB_TESTOBJ_HPP
 
-#define MANUAL_DEBUG
+// #define MANUAL_DEBUG
 
 #ifdef MANUAL_DEBUG
 #include <iostream>
 #endif
 
+#define DEFAULT_CONSTRUCTOR 0
 #define CONSTRUCTOR 1
 #define COPY_CONSTRUCTOR 2
 #define MOVE_CONSTRUCTOR 3
@@ -17,6 +18,14 @@ class testObj {
 public:
 	int val = 0;
 	unsigned int status = 0;
+
+    testObj() : val(0) {
+        status = DEFAULT_CONSTRUCTOR;
+
+#ifdef  MANUAL_DEBUG
+        std::cout << "Default constructor" << std::endl;
+#endif
+    }
 
 	explicit testObj(int i) : val(i) {
 		status = CONSTRUCTOR;
