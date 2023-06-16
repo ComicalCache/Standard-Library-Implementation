@@ -11,6 +11,7 @@
 #define EXT_VECTOR_NOTHROW_MOVE_DESTRUCTIBLE(T) std::is_nothrow_move_constructible<T>::value
 
 #define EXT_VECTOR_BUFFER_INIT(size) (T *) ::operator new(size * sizeof(T))
+#define EXT_VECTOR_BUFFER_DELETE ::operator delete(this->buffer)
 #define EXT_VECTOR_SIZE(x) (2>x?2:x)
 
 #define EXT_VECTOR_SCALE_FACTOR 1.6
@@ -38,7 +39,7 @@ namespace ext {
     private:
         size_t buffer_size;
         size_t item_counter;
-        T *buffer;
+        T *buffer = nullptr;
 
         /**
          * Changes the size of the buffer
@@ -47,7 +48,7 @@ namespace ext {
          * @param newSize
          */
         void _internal_resize(size_t newSize) {
-            vector < T > temp(newSize);
+            vector<T> temp(newSize);
             this->_internal_simple_copy_vector_to(temp);
             temp.swap(*this);
         };
@@ -172,6 +173,7 @@ namespace ext {
             } else {
                 // if not enough memory has been allocated we need to allocate more
                 // aka. create new Vector of the Vector we want to copy and swap the current one with it
+                // TODO is this falsy? move semantics breached?
                 vector<T> temp(vec);
                 temp.swap(*this);
             }
@@ -413,7 +415,7 @@ namespace ext {
         ~vector() {
             if (this->buffer != nullptr) {
                 this->_internal_clear_items();
-                ::operator delete(this->buffer);
+                EXT_VECTOR_BUFFER_DELETE;
                 this->buffer = nullptr;
             }
         };
@@ -425,7 +427,7 @@ namespace ext {
          */
         vector<T> &operator=(const vector<T> &vec) {
             if (this != &vec) {
-                this->_internal_copy_assign(vec); // ? no catch
+                this->_internal_copy_assign(vec); // TODO no catch?
             }
 
             return *this;
