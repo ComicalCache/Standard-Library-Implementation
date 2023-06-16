@@ -6,8 +6,9 @@
 
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(n) if (n > this->_d) { throw std::runtime_error("too many dimension sizes"); }
 #define EXT_ARRAY_ASSERT_DIMENSION_COUNT(n) if (n < 1) { throw std::runtime_error("too few dimensions"); }
-#define EXT_ARRAY_ASSERT_DIMENSION_SIZE(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
+#define EXT_ARRAY_ASSERT_DIMENSION_SIZE_INIT(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
 #define EXT_ARRAY_ASSERT_INDEX_COUNT(i) if (sizeof... (i) > this->_d) { throw std::runtime_error("too many indices"); }
+#define EXT_ARRAY_ASSERT_INDEX_SIZE(i, n) if (i >= this->_n[n]) { throw std::runtime_error("Index must less than dim_size"); }
 
 #define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T) std::is_default_constructible<T>::value
@@ -22,13 +23,11 @@ concept is_integral = std::is_integral_v<U>;
 
 namespace ext {
     /**
-     * A D dimensional static sized array where each dimension's size can be individually defined. <br>
-     * Example: ext::array<int, 4, 3, 2> is a 4 dimensional array with respective dimension sizes 3, 2, 2, 2.
+     * A D dimensional static sized array created at runtime where each dimension's size can be individually defined. <br>
+     * Example: ext::array<int>(4, 3, 2) is a 4 dimensional array with respective dimension sizes 3, 2, 2, 2.
      * @tparam T - Type to store
-     * @tparam D - Number of dimensions
-     * @tparam N - Size of each dimension
      */
-    template<class T, size_t D = 0, size_t... N> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
+    template<class T> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
     class dynamic_array {
     private:
         /**
@@ -56,9 +55,7 @@ namespace ext {
 
             size_t count = 1;
             for (const auto i: {indices...}) {
-                if (i >= this->_n[count]) {
-                    throw std::runtime_error("invalid index for dimension");
-                }
+                EXT_ARRAY_ASSERT_INDEX_SIZE(i, count)
 
                 if (!init_iter) {
                     index *= this->_n[count];
@@ -151,7 +148,7 @@ namespace ext {
 
             size_t index = 0;
             for (const auto i: {ns...}) {
-                EXT_ARRAY_ASSERT_DIMENSION_SIZE(i)
+                EXT_ARRAY_ASSERT_DIMENSION_SIZE_INIT(i)
 
                 this->_n[index] = i;
                 index += 1;
@@ -174,12 +171,9 @@ namespace ext {
 
         /**
          * Copies an Array into the current Array
-         * @tparam X - Ignored
-         * @tparam Y - Ignored
          * @param arr
          */
-        template<size_t X, size_t... Y>
-        void _internal_copy_assign(ext::dynamic_array<T, X, Y...> &arr) {
+        void _internal_copy_assign(ext::dynamic_array<T> &arr) {
             // clean up if necessary
             if (this->buffer != nullptr) {
                 this->_internal_clear_items();
@@ -195,20 +189,9 @@ namespace ext {
 
             (void) std::memcpy(this->_n, arr.dimension_sizes(), this->_d * sizeof(size_t));
             (void) std::memcpy(this->buffer, arr.data(), this->_size * sizeof(T));
-            // (void) std::copy(arr->_n, arr->_n + arr->_d, this->_n);
-            // (void) std::copy(arr->buffer, arr->buffer + arr->_size, this->buffer);
         };
 
     public:
-        /**
-         * Creates a new D dimensional array with the dimension sizes N <br>
-         * If less N's are provided than the size of D the last D - count(N...) dimensions
-         * have the same size last defined.
-         */
-        dynamic_array<T>() requires (D != 0) {
-            this->_internal_constructor_work(D, N...);
-        };
-
         /**
          * Creates a new D dimensional array with the dimension sizes N <br>
          * If less N's are provided than the size of D the last D - count(N...) dimensions
@@ -218,18 +201,15 @@ namespace ext {
          * @param ns - Dimension sizes
          */
         template<is_integral... Ns>
-        dynamic_array<T>(size_t d, Ns... ns) requires (D == 0 && (sizeof... (N) == 0)) {
+        dynamic_array<T>(size_t d, Ns... ns) {
             this->_internal_constructor_work(d, ns...);
         };
 
         /**
          * Copy constructs an array from a given array
-         * @tparam X - Ignored
-         * @tparam Y - Ignored
          * @param arr - The array to copy
          */
-        template<size_t X, size_t... Y>
-        dynamic_array<T>(ext::dynamic_array<T, X, Y...> &arr) requires ((D == 0 || D == X) && (sizeof... (N) == 0)) {
+        dynamic_array<T>(ext::dynamic_array<T> &arr) {
             this->_internal_copy_assign(arr);
         };
 
