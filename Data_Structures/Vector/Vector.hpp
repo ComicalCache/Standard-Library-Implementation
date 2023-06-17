@@ -355,8 +355,21 @@ namespace ext {
          * Constructs Vector of size MAX(2, size)
          * @param size - Size of Vector
          */
-        explicit vector(size_t size) : buffer_size(EXT_VECTOR_SIZE(size)), item_counter(0),
-                                       buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {};
+        vector(size_t size) : buffer_size(EXT_VECTOR_SIZE(size)), item_counter(0),
+                              buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {};
+
+        /**
+         * Constructs Vector of size MAX(2, size) with each element being initialized with default_v
+         * @param size - Size of Vector
+         * @param default_v - Default value for each element
+         */
+        vector(size_t size, const T &default_v) : buffer_size(EXT_VECTOR_SIZE(size)), item_counter(0),
+                                                  buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
+            for (size_t i = 0; i < this->buffer_size; i += 1) {
+                this->_internal_copy_put(i, default_v);
+            }
+        };
+
 
         /**
          * Copy constructs a Vector from a given Vector

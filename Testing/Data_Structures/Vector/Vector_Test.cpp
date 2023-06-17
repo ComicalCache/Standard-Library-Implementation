@@ -21,6 +21,18 @@ BOOST_AUTO_TEST_CASE(Vector_Size_Constructor) {
     BOOST_TEST(vec.size() == 0);
 }
 
+BOOST_AUTO_TEST_CASE(Vector_Size_Default_Value_Constructor) {
+    ext::vector<std::string> vec(5, "3");
+
+    size_t counter = 0;
+    for (std::string s : vec) {
+        BOOST_TEST(s == "3");
+        counter += 1;
+    }
+
+    BOOST_TEST(counter == 5);
+}
+
 BOOST_AUTO_TEST_CASE(Vector_Copy_Constructor) {
     ext::vector<int> vec1Original({0, 1, 2});
     ext::vector<int> vec1Copy(vec1Original);
