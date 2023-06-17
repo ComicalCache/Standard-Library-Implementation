@@ -114,6 +114,11 @@ namespace ext {
             }
         };
 
+        /**
+         * Clears an item or all subsequent dimensions given indices
+         * @tparam Args - Dimension sizes type (this is always size_t and just for convenience)
+         * @param indices - The index/indices to delete
+         */
         template<typename... Args>
         void _internal_clear_items(Args... indices) {
             size_t index = this->_internal_calculate_index(indices...);
@@ -132,22 +137,21 @@ namespace ext {
 
         /**
          * Initialises the array according to dimension and their respective sizes
+         * @tparam N - Type of the at least one of the dimension sizes (this is always size_t and just for convenience)
          * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
          * @param d - Dimension count
          * @param ns - Dimension sizes
          */
-        template<is_integral... Ns>
-        void _internal_constructor_work(size_t d, Ns... ns) {
-            EXT_ARRAY_ASSERT_DIMENSION_COUNT(d);
-
+        template<is_integral N, is_integral... Ns>
+        void _internal_constructor_work(size_t d, N n, Ns... ns) {
             this->_n = EXT_ARRAY_DIMENSION_SIZE_INIT(d);
             this->_d = d;
 
-            size_t supplied_dims = sizeof...(Ns);
+            size_t supplied_dims = sizeof...(Ns) + 1;
             EXT_ARRAY_ASSERT_DIMENSION_COUNT_SIZES(supplied_dims)
 
             size_t index = 0;
-            for (const auto i: {ns...}) {
+            for (const auto i: {n, ns...}) {
                 EXT_ARRAY_ASSERT_DIMENSION_SIZE_INIT(i)
 
                 this->_n[index] = i;
@@ -196,13 +200,14 @@ namespace ext {
          * Creates a new D dimensional array with the dimension sizes N <br>
          * If less N's are provided than the size of D the last D - count(N...) dimensions
          * have the same size last defined. <br>
+         * @tparam N - Type of the at least one of the dimension sizes (this is always size_t and just for convenience)
          * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
          * @param d - Dimension count
          * @param ns - Dimension sizes
          */
-        template<is_integral... Ns>
-        dynamic_array<T>(size_t d, Ns... ns) {
-            this->_internal_constructor_work(d, ns...);
+        template<is_integral N, is_integral... Ns>
+        dynamic_array<T>(size_t d, N n, Ns... ns) {
+            this->_internal_constructor_work(d, n, ns...);
         };
 
         /**
@@ -211,6 +216,14 @@ namespace ext {
          */
         dynamic_array<T>(ext::dynamic_array<T> &arr) {
             this->_internal_copy_assign(arr);
+        };
+
+        /**
+         * Move constructs array from given array
+         * @param arr - Array to be moved
+         */
+        dynamic_array<T>(ext::dynamic_array<T> &&arr) {
+            this->swap(arr);
         };
 
         /**
@@ -336,6 +349,17 @@ namespace ext {
         template<typename... Args>
         void clear(Args... indices) {
             this->_internal_clear_items(indices...);
+        };
+
+        /**
+         * Swaps the content of two arrays
+         * @param arr - Array to swap with
+         */
+        void swap(ext::dynamic_array<T> &arr) {
+            std::swap(this->_d, arr._d);
+            std::swap(this->_size, arr._size);
+            std::swap(this->_n, arr._n);
+            std::swap(this->buffer, arr.buffer);
         };
     };
 }

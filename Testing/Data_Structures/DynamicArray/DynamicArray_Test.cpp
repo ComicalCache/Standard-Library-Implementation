@@ -27,6 +27,15 @@ BOOST_AUTO_TEST_CASE(Array_Runtime_Constructor) {
         BOOST_TEST(arr3.length_of_dimension(i) == arr3_dims[i - 1]);
     }
 
+    auto test_0_dim_len1 = [&arr1]() {
+        return arr1.length_of_dimension(0);
+    };
+    auto test_0_dim_len2 = [&arr1]() {
+        return arr1.length_of_dimension(6);
+    };
+    BOOST_CHECK_THROW(test_0_dim_len1(), std::runtime_error);
+    BOOST_CHECK_THROW(test_0_dim_len2(), std::runtime_error);
+
     auto test_0_dim_size = []() {
         return ext::dynamic_array<int>(5, 0);
     };
@@ -65,6 +74,36 @@ BOOST_AUTO_TEST_CASE(Array_Copy_Constructor) {
 
     BOOST_TEST(arr1.at(1, 0, 0, 0) != 7);
     BOOST_TEST(arr2.at(1, 0, 0, 0) != "7");
+}
+
+BOOST_AUTO_TEST_CASE(Array_Move_Constructor) {
+    ext::dynamic_array<int> arr1(4, 4);
+    arr1[0, 1, 2, 3] = 7;
+    arr1[3, 2, 1, 0] = 5;
+    int *arr1_data_pointer = arr1.data();
+    size_t *arr1_ns_pointer = arr1.dimension_sizes();
+    ext::dynamic_array<int> arr1_move(std::move(arr1));
+
+    ext::dynamic_array<testObj> arr2(4, 4);
+    arr2[0, 1, 2, 3] = testObj(7);
+    arr2[3, 2, 1, 0] = testObj(5);
+    testObj *arr2_data_pointer = arr2.data();
+    size_t *arr2_ns_pointer = arr2.dimension_sizes();
+    ext::dynamic_array<testObj> arr2_move(std::move(arr2));
+
+    BOOST_TEST(arr1_move.at(0, 1, 2, 3) == 7);
+    BOOST_TEST(arr1_move.at(3, 2, 1, 0) == 5);
+    BOOST_TEST(arr1_move.data() == arr1_data_pointer);
+    BOOST_TEST(arr1_move.dimension_sizes() == arr1_ns_pointer);
+    BOOST_TEST(arr1.data() == nullptr);
+    BOOST_TEST(arr1.dimension_sizes() == nullptr);
+
+    BOOST_TEST(arr2_move.at(0, 1, 2, 3).val == testObj(7).val);
+    BOOST_TEST(arr2_move.at(3, 2, 1, 0).val == testObj(5).val);
+    BOOST_TEST(arr2_move.data() == arr2_data_pointer);
+    BOOST_TEST(arr2_move.dimension_sizes() == arr2_ns_pointer);
+    BOOST_TEST(arr2.data() == nullptr);
+    BOOST_TEST(arr2.dimension_sizes() == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(Array_Indexing) {
@@ -144,27 +183,50 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
     ext::dynamic_array<int> arr1(4, 5);
     ext::dynamic_array<std::string> arr2(4, 5);
 
-    int counter = 1;
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
             for (size_t l = 0; l < 5; l += 1) {
-                arr1[2ul, i, j, l] = counter;
-                counter += 1;
+                arr1[2ul, i, j, l] = i * 100 + j * 10 + l;
             }
         }
     }
 
     arr1.clear(2, 2, 2, 2);
-    BOOST_TEST(arr1.at(2, 2, 2, 2) == int());
+    for (size_t i = 0; i < 5; i += 1) {
+        for (size_t j = 0; j < 5; j += 1) {
+            for (size_t l = 0; l < 5; l += 1) {
+                if (i != 2 || j != 2 || l != 2) {
+                    BOOST_TEST(arr1.at(2ul, i, j, l) == i * 100 + j * 10 + l);
+                } else {
+                    BOOST_TEST(arr1.at(2, 2, 2, 2) == int());
+                }
+            }
+        }
+    }
 
     arr1.clear(2, 2, 2);
     for (size_t i = 0; i < 5; i += 1) {
-        BOOST_TEST(arr1.at(2ul, 2ul, 2ul, i) == int());
+        for (size_t j = 0; j < 5; j += 1) {
+            for (size_t l = 0; l < 5; l += 1) {
+                if (i != 2 || j != 2) {
+                    BOOST_TEST(arr1.at(2ul, i, j, l) == i * 100 + j * 10 + l);
+                } else {
+                    BOOST_TEST(arr1.at(2, 2, 2, 2) == int());
+                }
+            }
+        }
     }
+
     arr1.clear(2, 2);
     for (size_t i = 0; i < 5; i += 1) {
         for (size_t j = 0; j < 5; j += 1) {
-            BOOST_TEST(arr1.at(2ul, 2ul, i, j) == int());
+            for (size_t l = 0; l < 5; l += 1) {
+                if (i != 2) {
+                    BOOST_TEST(arr1.at(2ul, i, j, l) == i * 100 + j * 10 + l);
+                } else {
+                    BOOST_TEST(arr1.at(2, 2, 2, 2) == int());
+                }
+            }
         }
     }
 
@@ -200,4 +262,57 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
             }
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(Array_Swap_Method) {
+    ext::dynamic_array<int> arr1(4, 4);
+    arr1[0, 1, 2, 3] = 7;
+    arr1[3, 2, 1, 0] = 5;
+    int *arr1_data_pointer = arr1.data();
+    size_t *arr1_ns_pointer = arr1.dimension_sizes();
+    ext::dynamic_array<int> arr2(3, 3);
+    arr2[0, 1, 2] = 7;
+    arr2[2, 1, 0] = 5;
+    int *arr2_data_pointer = arr2.data();
+    size_t *arr2_ns_pointer = arr2.dimension_sizes();
+
+    ext::dynamic_array<testObj> arr3(4, 4);
+    arr3[0, 1, 2, 3] = testObj(7);
+    arr3[3, 2, 1, 0] = testObj(5);
+    testObj* arr3_data_pointer = arr3.data();
+    size_t *arr3_ns_pointer = arr3.dimension_sizes();
+    ext::dynamic_array<testObj> arr4(3, 3);
+    arr4[0, 1, 2] = testObj(7);
+    arr4[2, 1, 0] = testObj(5);
+    testObj* arr4_data_pointer = arr4.data();
+    size_t *arr4_ns_pointer = arr4.dimension_sizes();
+
+    arr1.swap(arr2);
+    arr3.swap(arr4);
+
+    BOOST_TEST(arr1.at(0, 1, 2) == 7);
+    BOOST_TEST(arr1.at(2, 1, 0) == 5);
+    BOOST_TEST(arr2.at(0, 1, 2, 3) == 7);
+    BOOST_TEST(arr2.at(3, 2, 1, 0) == 5);
+    BOOST_TEST(arr1.data() == arr2_data_pointer);
+    BOOST_TEST(arr1.dimension_sizes() == arr2_ns_pointer);
+    BOOST_TEST(arr1.dimensions() == 3);
+    BOOST_TEST(arr1.size() == 3 * 3 * 3);
+    BOOST_TEST(arr2.data() == arr1_data_pointer);
+    BOOST_TEST(arr2.dimension_sizes() == arr1_ns_pointer);
+    BOOST_TEST(arr2.dimensions() == 4);
+    BOOST_TEST(arr2.size() == 4 * 4 * 4 * 4);
+
+    BOOST_TEST(arr3.at(0, 1, 2).val == testObj(7).val);
+    BOOST_TEST(arr3.at(2, 1, 0).val == testObj(5).val);
+    BOOST_TEST(arr4.at(0, 1, 2, 3).val == testObj(7).val);
+    BOOST_TEST(arr4.at(3, 2, 1, 0).val == testObj(5).val);
+    BOOST_TEST(arr3.data() == arr4_data_pointer);
+    BOOST_TEST(arr3.dimension_sizes() == arr4_ns_pointer);
+    BOOST_TEST(arr3.dimensions() == 3);
+    BOOST_TEST(arr3.size() == 3 * 3 * 3);
+    BOOST_TEST(arr4.data() == arr3_data_pointer);
+    BOOST_TEST(arr4.dimension_sizes() == arr3_ns_pointer);
+    BOOST_TEST(arr4.dimensions() == 4);
+    BOOST_TEST(arr4.size() == 4 * 4 * 4 * 4);
 }
