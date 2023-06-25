@@ -13,11 +13,7 @@ ext::vector<T> vec;
 ```
 
 ## Dynamic Array
-##### TODO: change docs
-##### TODO: Add move constructor from other dynamic_array
-##### TODO: Add constructor with init value
-##### TODO: Add constructor with values from initializer list
-##### TODO: Add constructor from iterable/list/dynamic_array with values from iterable
+##### TODO: Add constructor with init value (how to solve ambiguity?)
 ##### TODO: Add constructor from iterable/list/dynamic_array with dimension and sizes
 ##### TODO: Add all assignment cases
 ##### TODO: Add slice insert

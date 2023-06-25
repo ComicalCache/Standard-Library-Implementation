@@ -9,6 +9,7 @@
 #define EXT_ARRAY_ASSERT_DIMENSION_SIZE_INIT(n) if (n < 1) { throw std::runtime_error("dimension size must be bigger than 0"); }
 #define EXT_ARRAY_ASSERT_INDEX_COUNT(i) if (sizeof... (i) > this->_d) { throw std::runtime_error("too many indices"); }
 #define EXT_ARRAY_ASSERT_INDEX_SIZE(i, n) if (i >= this->_n[n]) { throw std::runtime_error("Index must less than dim_size"); }
+#define EXT_ARRAY_ASSERT_INIT_LIST_SIZE(i) if (i > this->_size) { throw std::runtime_error("Too many iterator/list elements..."); }
 
 #define EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T) std::is_trivially_destructible<T>::value
 #define EXT_ARRAY_DEFAULT_CONSTRUCTOR(T) std::is_default_constructible<T>::value
@@ -29,6 +30,10 @@ namespace ext {
      */
     template<class T> requires EXT_ARRAY_DEFAULT_CONSTRUCTOR(T)
     class dynamic_array {
+    public:
+        using iterator = T *;
+        using const_iterator = T const *;
+
     private:
         /**
          * Length of dimensions
@@ -91,14 +96,13 @@ namespace ext {
         };
 
         /**
-         * Initialises each item in the array with the default constructor.
-         * @warning this operation is expensive
+         * Initialises each item in the array with the default value
          */
         void _internal_init_items() {
             for (size_t i = 0; i < this->_size; i += 1) {
-                this->buffer[i] = T();
+                new(this->buffer + i) T();
             }
-        };
+        }
 
         /**
          * Clears all items in the array and constructs a new instance <br>
@@ -110,7 +114,8 @@ namespace ext {
                 if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
                     this->buffer[i].~T();
                 }
-                this->buffer[i] = T();
+
+                new(this->buffer + i) T();
             }
         };
 
@@ -131,7 +136,8 @@ namespace ext {
                 if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
                     this->buffer[i].~T();
                 }
-                this->buffer[i] = T();
+
+                new(this->buffer + i) T();
             }
         };
 
@@ -170,6 +176,7 @@ namespace ext {
                 this->_size *= this->_n[i];
             }
             this->buffer = EXT_ARRAY_BUFFER_INIT(this->_size);
+
             this->_internal_init_items();
         };
 
@@ -195,6 +202,42 @@ namespace ext {
             (void) std::memcpy(this->buffer, arr.data(), this->_size * sizeof(T));
         };
 
+        /**
+         * Copies elements to this array's buffer from another data pointer. <br>
+         * Destructs present elements if necessary, no bounds checking
+         * @param data - Data pointer
+         * @param len - Amount of items at the data pointer
+         */
+        void _internal_assign_from_pointer(T* data, size_t len) {
+            for (size_t i = 0; i < len; i += 1) {
+                if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
+                    this->buffer[i].~T();
+                }
+
+                new(this->buffer + i) T(data[i]);
+            }
+        };
+
+        /**
+         * Copies elements to this array's buffer from an iterator. <br>
+         * Destructs elements if necessary, no bounds checking
+         * @param start
+         * @param stop
+         */
+        void _internal_assign_from_iterator(iterator start, iterator stop) {
+            size_t index = 0;
+            while (start != stop) {
+                if (!EXT_ARRAY_TRIVIAL_DESTRUCTIBLE(T)) {
+                    this->buffer[index].~T();
+                }
+
+                new(this->buffer + index) T(*start);
+
+                index += 1;
+                start += 1;
+            }
+        }
+
     public:
         /**
          * Creates a new D dimensional array with the dimension sizes N <br>
@@ -203,7 +246,8 @@ namespace ext {
          * @tparam N - Type of the at least one of the dimension sizes (this is always size_t and just for convenience)
          * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
          * @param d - Dimension count
-         * @param ns - Dimension sizes
+         * @param n - Dimension size
+         * @param ns - Optional dimension sizes
          */
         template<is_integral N, is_integral... Ns>
         dynamic_array<T>(size_t d, N n, Ns... ns) {
@@ -225,6 +269,46 @@ namespace ext {
         dynamic_array<T>(ext::dynamic_array<T> &&arr) {
             this->swap(arr);
         };
+
+        /**
+         * Constructs array with copied values from a pointer. <br>
+         * The values are copied and placed sequentially in the array's data buffer
+         * @tparam N - Type of the at least one of the dimension sizes (this is always size_t and just for convenience)
+         * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
+         * @param data - Data pointer to copy values from
+         * @param len - Amount of items at the data pointer
+         * @param d - Dimension count
+         * @param n - Dimension size
+         * @param ns - Optional dimension sizes
+         */
+        template<is_integral N, is_integral... Ns>
+        dynamic_array<T>(T* data, size_t len, size_t d, N n, Ns... ns) {
+            this->_internal_constructor_work(d, n, ns...);
+
+            EXT_ARRAY_ASSERT_INIT_LIST_SIZE(len)
+
+            this->_internal_assign_from_pointer(data, len);
+        };
+
+        /**
+         * Constructs an array with copied values from an iterator range. <br>
+         * The values are copied and placed sequentially in the array's data buffer
+         * @tparam N - Type of the at least one of the dimension sizes (this is always size_t and just for convenience)
+         * @tparam Ns - Dimension sizes type (this is always size_t and just for convenience)
+         * @param start - Start of the iterator
+         * @param stop - End of the iterator
+         * @param d - Dimension count
+         * @param n - Dimension size
+         * @param ns - Optional dimension sizes
+         */
+        template<is_integral N, is_integral... Ns>
+        dynamic_array<T>(iterator start, iterator stop, size_t d, N n, Ns... ns) {
+            this->_internal_constructor_work(d, n, ns...);
+
+            EXT_ARRAY_ASSERT_INIT_LIST_SIZE(std::distance(start, stop))
+
+            this->_internal_assign_from_iterator(start, stop);
+        }
 
         /**
          * Destructor calls, if necessary, the constructor of each element in the buffer before freeing the buffer

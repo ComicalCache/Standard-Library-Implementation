@@ -6,7 +6,7 @@
 #include "DynamicArray/DynamicArray.hpp"
 #include <TestObj.hpp>
 
-BOOST_AUTO_TEST_CASE(Array_Runtime_Constructor) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Runtime_Constructor) {
     ext::dynamic_array<int> arr1(5, 4);
     ext::dynamic_array<std::string> arr2(5, 5, 4, 3);
     ext::dynamic_array<testObj> arr3(5, 5, 4, 3, 2, 1);
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Array_Runtime_Constructor) {
     BOOST_CHECK_THROW(test_0_dims(), std::runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE(Array_Copy_Constructor) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Copy_Constructor) {
     ext::dynamic_array<int> arr1(4, 4);
     ext::dynamic_array<std::string> arr2(5, 5);
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(Array_Copy_Constructor) {
     BOOST_TEST(arr2.at(1, 0, 0, 0) != "7");
 }
 
-BOOST_AUTO_TEST_CASE(Array_Move_Constructor) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Move_Constructor) {
     ext::dynamic_array<int> arr1(4, 4);
     arr1[0, 1, 2, 3] = 7;
     arr1[3, 2, 1, 0] = 5;
@@ -106,7 +106,74 @@ BOOST_AUTO_TEST_CASE(Array_Move_Constructor) {
     BOOST_TEST(arr2.dimension_sizes() == nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(Array_Indexing) {
+BOOST_AUTO_TEST_CASE(DynamicArray_List_Constructor) {
+    int list1[3 * 3 * 3];
+    std::string list2[3 * 3 * 3];
+    testObj list3[3 * 3 * 3];
+    for (int i = 0; i < 3; i += 1) {
+        for (int j = 0; j < 3; j += 1) {
+            for (int k = 0; k < 3; k += 1) {
+                int temp = (i + 1) * 100 + (j + 1) * 10 + (k + 1);
+                list1[i * 3 * 3 + j * 3 + k] = temp;
+                list2[i * 3 * 3 + j * 3 + k] = std::to_string(temp);
+                list3[i * 3 * 3 + j * 3 + k] = testObj(temp);
+            }
+        }
+    }
+
+    ext::dynamic_array<int> arr1(list1, 3 * 3 * 3, 3, 3);
+    ext::dynamic_array<std::string> arr2(list2, 3 * 3 * 3, 3, 3);
+    ext::dynamic_array<testObj> arr3(list3, 3 * 3 * 3, 3, 3);
+
+    BOOST_TEST(arr1.at(1, 2, 2) == 233);
+    for (int i = 0; i < 3; i += 1) {
+        for (int j = 0; j < 3; j += 1) {
+            for (int k = 0; k < 3; k += 1) {
+                int temp1 = list1[i * 3 * 3 + j * 3 + k];
+                std::string temp2 = list2[i * 3 * 3 + j * 3 + k];
+                testObj temp3 = list3[i * 3 * 3 + j * 3 + k];
+                BOOST_TEST(arr1.at(i, j, k) == temp1);
+                BOOST_TEST(arr2.at(i, j, k) == temp2);
+                BOOST_TEST(arr3.at(i, j, k).val == temp3.val);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DynamicArray_Iterator_Constructor) {
+    std::array<int, 3 * 3 * 3> list1;
+    std::array<std::string, 3 * 3 * 3> list2;
+    std::array<testObj, 3 * 3 * 3> list3;
+    for (int i = 0; i < 3; i += 1) {
+        for (int j = 0; j < 3; j += 1) {
+            for (int k = 0; k < 3; k += 1) {
+                int temp = (i + 1) * 100 + (j + 1) * 10 + (k + 1);
+                list1[i * 3 * 3 + j * 3 + k] = temp;
+                list2[i * 3 * 3 + j * 3 + k] = std::to_string(temp);
+                list3[i * 3 * 3 + j * 3 + k] = testObj(temp);
+            }
+        }
+    }
+
+    ext::dynamic_array<int> arr1(list1.begin(), list1.end(), 3, 3);
+    ext::dynamic_array<std::string> arr2(list2.begin(), list2.end(), 3, 3);
+    ext::dynamic_array<testObj> arr3(list3.begin(), list3.end(), 3, 3);
+
+    for (int i = 0; i < 3; i += 1) {
+        for (int j = 0; j < 3; j += 1) {
+            for (int k = 0; k < 3; k += 1) {
+                int temp1 = list1[i * 3 * 3 + j * 3 + k];
+                std::string temp2 = list2[i * 3 * 3 + j * 3 + k];
+                testObj temp3 = list3[i * 3 * 3 + j * 3 + k];
+                BOOST_TEST(arr1.at(i, j, k) == temp1);
+                BOOST_TEST(arr2.at(i, j, k) == temp2);
+                BOOST_TEST(arr3.at(i, j, k).val == temp3.val);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DynamicArray_Indexing) {
     ext::dynamic_array<int> arr1(3, 4);
     ext::dynamic_array<std::string> arr2(4, 5);
     ext::dynamic_array<testObj> arr3(5, 6);
@@ -161,7 +228,7 @@ BOOST_AUTO_TEST_CASE(Array_Indexing) {
 
 }
 
-BOOST_AUTO_TEST_CASE(Array_Clear) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Clear) {
     ext::dynamic_array<int> arr1(3, 4);
     ext::dynamic_array<std::string> arr2(4, 5);
     ext::dynamic_array<testObj> arr3(5, 6);
@@ -179,7 +246,7 @@ BOOST_AUTO_TEST_CASE(Array_Clear) {
     BOOST_TEST(arr3.at(1, 2, 3, 4, 5).val == testObj().val);
 }
 
-BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Indexed_Clear) {
     ext::dynamic_array<int> arr1(4, 5);
     ext::dynamic_array<std::string> arr2(4, 5);
 
@@ -264,7 +331,7 @@ BOOST_AUTO_TEST_CASE(Array_Indexed_Clear) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(Array_Swap_Method) {
+BOOST_AUTO_TEST_CASE(DynamicArray_Swap_Method) {
     ext::dynamic_array<int> arr1(4, 4);
     arr1[0, 1, 2, 3] = 7;
     arr1[3, 2, 1, 0] = 5;

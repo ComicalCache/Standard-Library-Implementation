@@ -409,12 +409,10 @@ namespace ext {
         /**
          * Constructs Vector from an iterator range <br>
          * Allocates space for at least two items in all cases
-         * @tparam Iterator - The iterator type
          * @param start - Start of range
          * @param stop - End of range
          */
-        template<typename Iterator>
-        vector(Iterator start, Iterator stop) : buffer_size(EXT_VECTOR_SIZE(std::distance(start, stop))),
+        vector(iterator start, iterator stop) : buffer_size(EXT_VECTOR_SIZE(std::distance(start, stop))),
                                                 item_counter(0), buffer(EXT_VECTOR_BUFFER_INIT(buffer_size)) {
             while (start != stop) {
                 this->_internal_copy_put(this->item_counter, *start);
@@ -680,13 +678,11 @@ namespace ext {
 
         /**
          * Inserts an iterator range at index
-         * @tparam Iterator - The iterator type
          * @param index - Index
          * @param start - Start of range
          * @param stop - End of range
          */
-        template<typename Iterator>
-        void insert(size_t index, Iterator start, Iterator stop) {
+        void insert(size_t index, iterator start, iterator stop) {
             size_t size = std::distance(start, stop);
             this->_internal_resize_on_demand(size);
             this->_internal_shift_right(index, size);
@@ -757,12 +753,10 @@ namespace ext {
 
         /**
          * Pushes an iterator range at the stop of the vector
-         * @tparam Iterator - The iterator type
          * @param start - Start of range
          * @param stop - End of range
          */
-        template<typename Iterator>
-        void push_back(Iterator start, Iterator stop) {
+        void push_back(iterator start, iterator stop) {
             size_t size = std::distance(start, stop);
             this->_internal_resize_on_demand(size);
 
